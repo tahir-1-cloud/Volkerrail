@@ -1,0 +1,356 @@
+﻿@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO;
+@using PRISM.DTO.Employeedto
+@using PRISM.Models;
+@using Nancy.Json;
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Home page";
+
+    bool IsInsert = false;
+    bool IsEdit = false;
+    bool IsRead = false;
+    bool IsDelete = false;
+}
+
+@Html.Hidden("RedirectTo", Url.Action("Index", "Home"));
+@if (User.Identity.IsAuthenticated)
+{
+    var identity = User.Identity as ClaimsIdentity;
+
+    try
+    {
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            var currentObj = roleObject.Where(x => x.ModuleId == 2).FirstOrDefault();
+            if (currentObj != null)
+            {
+                IsInsert = currentObj.ActionRoles.IsInsert ?? false;
+                IsEdit = currentObj.ActionRoles.IsEdit ?? false;
+                IsRead = currentObj.ActionRoles.IsRead ?? false;
+                IsDelete = currentObj.ActionRoles.IsDelete ?? false;
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+
+
+}
+
+
+
+@model RosterViewModel
+<style>
+    table tr td:nth-child(2), table tr td:nth-child(3), table tr td:nth-child(4) {
+        text-align: center !important;
+    }
+
+    table tr th:nth-child(2), table tr th:nth-child(3), table tr th:nth-child(4) {
+        text-align: center !important;
+    }
+
+    a.fc-event {
+        cursor: pointer !important
+    }
+
+    .fc-time-wrap .fc-time {
+        display: none !important;
+    }
+</style>
+<div id="apporg" class="d-flex flex-column-fluid align-items-start container-fluid">
+    <!--begin::Post-->
+    <div class="content flex-row-fluid" id="kt_content">
+        <!--begin::Card-->
+        <div class="card">
+
+            <div class="card-body py-2">
+
+                <div class="row">
+                    <div class="col-sm-2">
+                        <span>Department</span>
+                        <span>
+                            <select class="form-select form-select-solid" id="ddlMachineDepartment" @@change="GetRosterData('Department')">
+                                <option></option>
+                                @{
+                                    if (Model.DepartmentList?.Count > 0)
+                                    {
+                                        foreach (var temp in Model.DepartmentList)
+                                        {
+                                            <option value="@temp">@temp</option>
+                                        }
+                                    }
+                                }
+
+                            </select>
+                        </span>
+                    </div>
+                    <div class="col-sm-4 pt-4">
+                        <span>
+                            @{
+                                if (IsInsert)
+                                {
+                                    <button type="button" v-on:click="WeeklyComemntsPopup()" class="btn btn-primary">Comments</button>
+                                    <button type="button" v-on:click="WeeklyRosterReport()" class="btn btn-primary">Weekly Roster Report</button>
+                                }
+                            }
+                        </span>
+                    </div>
+                    <div class="col-sm-2">
+                        <label>
+                            Show me Shifts for Week
+                        </label>
+                        <select class="form-select form-select-solid" id="ddlFromWeek" @@change="GetRosterData('FromWeek')">
+                            <option></option>
+                            @{
+                                if (Model.WeekList?.Count > 0)
+                                {
+                                    foreach (var temp in Model.WeekList)
+                                    {
+                                        <option value="@temp.Id">@temp.Title</option>
+
+                                    }
+                                }
+                            }
+
+                        </select>
+                    </div>
+                    <div class="col-sm-2">
+                        <label>
+                            Show me Shifts for Week
+                        </label>
+                        <select class="form-select form-select-solid" id="ddlToWeek" @@change="GetRosterData('ToWeek')">
+                            <option></option>
+                            @{
+                                if (Model.WeekList?.Count > 0)
+                                {
+                                    foreach (var temp in Model.WeekList)
+                                    {
+                                        <option value="@temp.Id">@temp.Title</option>
+                                    }
+                                }
+                            }
+
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12" style="text-align:center;font-size:20px">
+                        <span id="spanFromWeek"></span> <span id="spanToWeek"></span>
+                        <span id="dateFromWeek"></span><span id="dateToWeek"></span>
+                    </div>
+                </div>
+
+                @{
+                    if (IsRead)
+                    {
+                        <div id="rosterGrid" style="height:700px"></div>
+                    }
+                }
+
+            </div>
+            <!--end::Card body-->
+        </div>
+        <!--end::Card-->
+    </div>
+    <div class="modal fade" id="absanceModel" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-dialog-centered mw-600px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" id="kt_modal_add_customer_header">
+                    <div id="kt_modal_add_customer_close" v-on:click="CloseAbsancePopup()" class="btn btn-icon btn-sm btn-active-icon-primary">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <span>From Date</span>
+                            <input type="text" class="form-control" readonly v-model="Absance.FromDate" />
+                        </div>
+                        <div class="col-md-6">
+                            <span>To Date</span>
+                            <input type="text" class="form-control" readonly v-model="Absance.ToDate" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <span>Leave Type</span>
+                            <input type="text" class="form-control" readonly v-model="Absance.LeaveType" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <span>Leave Reason</span>
+                            <input type="text" class="form-control" readonly v-model="Absance.Reason" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    
+
+    
+
+    <div class="modal fade" id="WeeklyComments" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered mw-650px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" style="padding-top:8px;padding-bottom:8px">
+                    <!--begin::Modal title-->
+                    <h2>Comments</h2>
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <div class="modal-body py-10">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label>Engineering Support</label>
+                            <textarea class="form-control" style="height:100px" v-model="comment.EngineeringSupport" id="txtEngineeringSupport">
+
+                            </textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label>Courses And Others</label>
+                            <textarea class="form-control" style="height:100px" v-model="comment.CoursesAndOthers" id="txtCoursesAndOthers">
+
+                            </textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label>Maintenance Arrangements</label>
+                            <table class="table-bordered" id="commenttable">
+                                <thead>
+                                    <tr>
+                                        <td>
+                                            <label>Machine</label>
+                                            <input type="text" class="form-control" v-model="item.ColumnNo1" />
+                                        </td>
+                                        <td> <label>Sat</label><input type="text" class="form-control" v-model="item.ColumnNo2" /></td>
+                                        <td> <label>Sun</label><input type="text" class="form-control" v-model="item.ColumnNo3" /></td>
+                                        <td> <label>Mon</label><input type="text" class="form-control" v-model="item.ColumnNo4" /></td>
+                                        <td> <label>Tue</label><input type="text" class="form-control" v-model="item.ColumnNo5" /></td>
+                                        <td> <label>Wed</label><input type="text" class="form-control" v-model="item.ColumnNo6" /></td>
+                                        <td> <label>Thu</label><input type="text" class="form-control" v-model="item.ColumnNo7" /></td>
+                                        <td> <label>Fri</label><input type="text" class="form-control" v-model="item.ColumnNo8" /></td>
+                                        <td> <a class="btn btn-primary btnadd" v-on:click="AddItems(item)"><i class="fa fa-plus"></i></a></td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="col in comment.ListArrangements">
+                                        <td>{{col.ColumnNo1}}</td>
+                                        <td>{{col.ColumnNo2}}</td>
+                                        <td>{{col.ColumnNo3}}</td>
+                                        <td>{{col.ColumnNo4}}</td>
+                                        <td>{{col.ColumnNo5}}</td>
+                                        <td>{{col.ColumnNo6}}</td>
+                                        <td>{{col.ColumnNo7}}</td>
+                                        <td>{{col.ColumnNo8}}</td>
+                                        <td><a class="btn btn-warning btndel" v-on:click="DeleteItem(col)"><i class="fa fa-trash"></i></a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer flex-center">
+                    <button type="button" class="btn btn-sm btn-primary" v-on:click="SubmitComment($event)">Save Comment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="shiftModel" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered mw-1000px">
+
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <span>Name</span>
+                            <input type="text" class="form-control" readonly="readonly" v-model="RosterShift.DriverName" />
+                            <span>Location</span>
+                            <input type="text" class="form-control" readonly="readonly" v-model="RosterShift.ShiftLocation" />
+                            <span>Description</span>
+                            <input type="text" class="form-control" v-model="RosterShift.Description" />
+                        </div>
+                        <div class="col-sm-6">
+                            <span>PS</span>
+                            <input type="text" class="form-control" readonly="readonly" v-model="RosterShift.StartDateTime" />
+                            <span>PF</span>
+                            <input type="text" class="form-control" readonly="readonly" v-model="RosterShift.FinishDateTime" />
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" v-on:click="SaveDescription($event)">OK</button>
+                    <button type="button" class="btn btn-primary" v-on:click="CloseShiftPopup()">Close</button>
+                    <button type="button" class="btn btn-primary" v-on:click="OpenShiftDetail()">Shift Log</button>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+@section scripts {
+    <script>
+        var WeekList = [];
+        @foreach (var name in Model.WeekList)
+        {
+            @:WeekList.push({ Id: @name.Id, WeekTitle: '@name.Title', StartDate: '@name.StartDate', FinishDate: '@name.EndDate' });
+        }
+</script>
+
+    <link href="https://cdn.jsdelivr.net/npm/@@fullcalendar/core@4.4.2/main.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@@fullcalendar/timeline@4.4.2/main.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@@fullcalendar/resource-timeline@4.4.2/main.min.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/core@4.4.2/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/interaction@4.4.2/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/timeline@4.4.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/resource-common@4.4.2/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/resource-timeline@4.4.2/main.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn3.devexpress.com/jslib/23.1.3/css/dx.light.css" />
+    <script src="https://cdn3.devexpress.com/jslib/23.1.3/js/dx.all.js"></script>
+
+
+
+
+    <script src="~/appscripts/roster.js" type="text/javascript"></script>
+
+    <script>
+
+        $(document).ready(function () {
+            $(".nav-item").removeClass("active");
+            $("#liEmployees").addClass("active");
+            $(".menu-item").removeClass("show");
+            $(".menu-item").removeClass("here");
+            $("#menuRoster").addClass("here");
+            $("#menuRoster").addClass("show");
+            $(".tab-pane").removeClass("active");
+            $("#tabEmployees").addClass("active");
+            $(".tab-pane").removeClass("show");
+            $("#tabEmployees").addClass("show");
+        })
+    </script>
+
+}

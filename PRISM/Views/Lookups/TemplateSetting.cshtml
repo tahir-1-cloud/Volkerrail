@@ -1,0 +1,398 @@
+﻿@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO;
+@using PRISM.DTO.Employeedto
+@using PRISM.Models;
+@using Nancy.Json;
+@using System.Security.Claims
+
+@{
+    bool IsInsert = false;
+    bool IsEdit = false;
+    bool IsRead = false;
+    bool IsDelete = false;
+}
+@if (User.Identity.IsAuthenticated)
+{
+    var identity = User.Identity as ClaimsIdentity;
+
+    try
+    {
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            var currentObj = roleObject.Where(x => x.ModuleId == 16).FirstOrDefault();
+            if (currentObj != null)
+            {
+                IsInsert = currentObj.ActionRoles.IsInsert ?? false;
+                IsEdit = currentObj.ActionRoles.IsEdit ?? false;
+                IsRead = currentObj.ActionRoles.IsRead ?? false;
+                IsDelete = currentObj.ActionRoles.IsDelete ?? false;
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+
+
+}
+@{
+    string type = "Template Setting";
+
+    var serializer = new JavaScriptSerializer();
+}
+
+<div id="apporg" class="d-flex flex-column-fluid align-items-start container-xxl">
+    <!--begin::Post-->
+    <div class="content flex-row-fluid" id="kt_content">
+        <!--begin::Card-->
+        <div class="card">
+            <!--begin::Card header-->
+            <div class="card-header border-0 pt-6">
+              
+                <div class="card-toolbar">
+                    <!--begin::Toolbar-->
+                    <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                        @{
+                            if (IsInsert)
+                            {
+                                    <button type="button" class="btn btn-primary" v-on:click="ShowLookup()">Add @type</button>
+                            }
+                        }
+
+                    </div>
+                </div>
+                <!--end::Card toolbar-->
+            </div>
+            <!--end::Card header-->
+            <!--begin::Card body-->
+            <div class="card-body pt-0">
+                <!--begin::Table-->
+                <table class="table align-middle table-row-dashed fs-6 gy-5">
+                    <thead>
+                        <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                            <th style="width:30px"></th>
+                            <th class="min-w-125px">Title</th>
+                            <th class="text-end min-w-70px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="fw-semibold text-gray-600">
+                        @{
+                            if (IsRead)
+                            {
+                                    <tr v-for="d in DataList">
+                                        <td>
+                                            {{d.Id}}
+                                        </td>
+                                        <td>
+                                            @{
+                                            if (IsEdit)
+                                            {
+                                                        <a v-on:click="Edit(d)" class="menu-link px-3">{{d.TemplateName}}</a>
+                                            }
+                                            else
+                                            {
+                                                        <p>{{d.TemplateName}}</p>
+                                            }
+                                            }
+
+                                        </td>
+
+                                        <td class="text-end">
+                                            @{
+                                            if (IsDelete)
+                                            {
+                                                <a class="menu-link px-3" v-on:click="Delete(d.Id)">Delete</a>
+                                            }
+                                                }
+                                        </td>
+
+                                    </tr>
+                            }
+                        }
+
+                    </tbody>
+                    <!--end::Table body-->
+                </table>
+                <!--end::Table-->
+            </div>
+            <!--end::Card body-->
+        </div>
+        <!--end::Card-->
+        <!--begin::Modals-->
+        <!--begin::Modal - Customers - Add-->
+        <div class="modal fade" id="lookupmodel" tabindex="-1" aria-hidden="true">
+            <!--begin::Modal dialog-->
+            <div class="modal-dialog modal-dialog-centered mw-650px">
+                <!--begin::Modal content-->
+                <div class="modal-content">
+                    <!--begin::Form-->
+                    <!--begin::Modal header-->
+                    <div class="modal-header" id="kt_modal_add_customer_header">
+                        <!--begin::Modal title-->
+                        <h2 class="fw-bold">Add Template</h2>
+                        <!--end::Modal title-->
+                        <!--begin::Close-->
+                        <div id="kt_modal_add_customer_close" v-on:click="ClosePopup()" class="btn btn-icon btn-sm btn-active-icon-primary">
+                            <i class="ki-duotone ki-cross fs-1">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                            </i>
+                        </div>
+                        <!--end::Close-->
+                    </div>
+                    <!--end::Modal header-->
+                    <!--begin::Modal body-->
+                    <div class="modal-body py-10 px-lg-17">
+                        <!--begin::Scroll-->
+                        <form id="inputform">
+                        <div class="scroll-y me-n7 pe-7">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7">
+                                <label class="required fs-6 fw-semibold mb-2">Title</label>
+                                    <input type="text" class="form-control form-control-solid  validate[required]" v-model="d.TemplateName" />
+                                <!--end::Input-->
+                            </div>
+                            <div class="fv-row mb-15">
+
+
+                                <label v-for="col in GridColumns" class="checkbox col-md-3">
+                                    <input type="checkbox" v-model="col.checked" />
+                                    <span></span>
+                                    {{col.caption}}
+                                </label>
+
+                            </div>
+
+                        </div>
+                        </form>
+                        <!--end::Scroll-->
+                    </div>
+                    <!--end::Modal body-->
+                    <!--begin::Modal footer-->
+                    <div class="modal-footer flex-center">
+                        <!--begin::Button-->
+                        <button type="reset" id="kt_modal_add_customer_cancel" v-on:click="ClosePopup()" class="btn btn-light me-3">Discard</button>
+                        <!--end::Button-->
+                        <!--begin::Button-->
+                        @{
+                            if (IsInsert)
+                            {
+                                    <button type="button" id="kt_modal_add_customer_submit" class="btn btn-primary" v-on:click="Insert($event)">
+                                        <span class="indicator-label">Submit</span>
+                                        <span class="indicator-progress">
+                                            Please wait...
+                                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                        </span>
+                                    </button>
+                            }
+                            }
+                            <!--end::Button-->
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!--end::Post-->
+</div>
+
+
+@section scripts {
+    <link href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script>
+        var objCommon = new Common();
+        $(document).ready(function () {
+
+
+            var app = new Vue({
+                el: '#apporg',
+                data: {
+                    DataList: [],
+                    GridColumns: [],
+                    d: {}
+                },
+                methods: {
+                    Delete(id) {
+                        var param = {
+                            Id: id
+                        };
+
+                        objCommon.AjaxCall("/Lookups/DeleteTemplate", JSON.stringify(param), "POST", true, function (response) {
+                            objCommon.ShowMessage("Deleted.", "success");
+                            location.reload();
+                        });
+                    },
+                    Edit(data) {
+                        var dxthis = this;
+
+                        dxthis.GridColumns.forEach(function (v) {
+                            v.checked = false;
+                        })
+
+                        //console.log(data);
+                        //var json = JSON.parse(data);
+                        console.log(data.Columns);
+                        var ColumnsName = [];
+                        if (data.Columns != null && data.Columns != undefined) {
+                            ColumnsName = data.Columns.split(",");
+                            console.log(ColumnsName);
+                            if (ColumnsName.length > 0) {
+                                ColumnsName.forEach(function (v) {
+                                    console.log(v);
+                                    var object = dxthis.GridColumns.filter(x => x.dataField == v)[0];
+                                    console.log(object);
+                                    if (object != undefined && object != null) {
+                                        object.checked = true;
+                                    }
+                                })
+                            }
+                        }
+                        this.d = data;
+
+
+
+                        $("#lookupmodel").modal("show");
+                    },
+                    ShowLookup($event) {
+
+                        this.GridColumns.forEach(function (v) {
+                            v.checked = false;
+                        })
+
+                        $("#lookupmodel").modal("show");
+                    },
+                    Insert($event) {
+                        if (!objCommon.Validate("#inputform"))
+                            return;
+
+                        this.d.Columns = "";
+                        var param = this.d;
+                        var columnsTrue = [];
+                        var columns = this.GridColumns.filter(x => x.checked == true);
+                        if (columns != undefined && columns != null) {
+                            columns.forEach(function (v) {
+                                columnsTrue.push(v.dataField);
+                            })
+                        }
+
+                        if (columnsTrue.length == 0) {
+                            objCommon.ShowMessage("Atleast one column should be select.", "error");
+                            return;
+                        }
+
+                        param.Columns = columnsTrue.toString();
+
+                        objCommon.AjaxCall("/Lookups/InsertTemplate", JSON.stringify(param), "POST", true, function (response) {
+                            objCommon.ShowMessage("Added.", "success");
+
+                            $("#lookupmodel").modal("hide");
+                            location.reload();
+                        }, $event.currentTarget);
+
+                    },
+                    GetData($event) {
+                        var dxthis = this;
+
+
+
+
+
+                        objCommon.AjaxCall("/Lookups/GetTemplateData", $.param({}), "GET", true, function (response) {
+                            dxthis.DataList = response;
+                        }, $event == null ? null : $event.currentTarget);
+
+                    }
+                    ,
+                    ClosePopup() {
+                        $("#lookupmodel").modal("hide");
+                    }
+                },
+                created() {
+                    this.GetData(null);
+
+                    this.GridColumns.push({ dataField: 'PprePlannedHours', caption: 'R', checked: false });
+                    this.GridColumns.push({ dataField: 'Ptonumber', caption: 'PTO No.', checked: false });
+                    this.GridColumns.push({ dataField: 'Id', caption: 'MUF No.', checked: false });
+                    this.GridColumns.push({ dataField: 'MachineNum', caption: 'M/C No.', checked: false });
+                    this.GridColumns.push({ dataField: 'MachineType', caption: 'Type', checked: false });
+                    this.GridColumns.push({ dataField: 'MachineMgr', caption: 'Mgr', checked: false });
+                    this.GridColumns.push({ dataField: 'PpreLogNumber', caption: 'Log', checked: false });
+                    this.GridColumns.push({ dataField: 'ShiftNo', caption: 'Shift', checked: false });
+                    this.GridColumns.push({ dataField: 'PpreDay', caption: 'Day', checked: false });
+                    this.GridColumns.push({ dataField: 'WeekNo', caption: 'Week', checked: false });
+                    this.GridColumns.push({ dataField: 'PpreAct', caption: 'ACT' });
+                    this.GridColumns.push({ dataField: 'StartDateTime', caption: 'Start', checked: false });
+                    this.GridColumns.push({ dataField: 'FinishDateTime', caption: 'Finish', checked: false });
+                    this.GridColumns.push({ dataField: 'PpreDra', caption: 'DRA' });
+                    this.GridColumns.push({ dataField: 'WorksiteDetails', caption: 'Location', checked: false });
+                    this.GridColumns.push({ dataField: 'Ppsreference', caption: 'Pps Ref', checked: false });
+                    this.GridColumns.push({ dataField: 'Shift', caption: 'Shift Status', checked: false });
+                    this.GridColumns.push({ dataField: 'PprePlfield', caption: 'Remark', checked: false });
+                    this.GridColumns.push({ dataField: 'Customer', caption: 'Company', checked: false });
+                    this.GridColumns.push({ dataField: 'Contractor', caption: 'Division', checked: false });
+                    this.GridColumns.push({ dataField: 'Route', caption: 'Zone', checked: false });
+                    this.GridColumns.push({ dataField: 'WorksiteElr', caption: 'ELR', checked: false });
+                    this.GridColumns.push({ dataField: 'PpreRTNo', caption: 'RT No.' });
+                    this.GridColumns.push({ dataField: 'PriorityStatusShift', caption: 'TOC', checked: false });
+                    this.GridColumns.push({ dataField: 'PPreContractor', caption: 'Cond', checked: false });
+                    this.GridColumns.push({ dataField: 'OutShortCode', caption: 'From', checked: false });
+                    this.GridColumns.push({ dataField: 'InShortCode', caption: 'To', checked: false });
+                    this.GridColumns.push({ dataField: 'PpreInternalComments', caption: 'Int Comm', checked: false });
+                    this.GridColumns.push({ dataField: 'WonNumber', caption: 'WON', checked: false });
+                    this.GridColumns.push({ dataField: 'PpreOTML', caption: 'OTML' });
+                    this.GridColumns.push({ dataField: 'PpreOperator', caption: 'Operators', checked: false });
+                    this.GridColumns.push({ dataField: 'PpreES', caption: 'ES' });
+                    this.GridColumns.push({ dataField: 'PpreTQS', caption: 'TQS' });
+                    this.GridColumns.push({ dataField: 'PpreTQSPhone', caption: 'TQS Phone', checked: false });
+                    this.GridColumns.push({ dataField: 'PprePICOPPhone', caption: 'PICOP Phone', checked: false });
+                    this.GridColumns.push({ dataField: 'PpreMCO', caption: 'MCO' });
+                    this.GridColumns.push({ dataField: 'PpreAPM', caption: 'APM' });
+                    this.GridColumns.push({ dataField: 'PpreAPMPhone', caption: 'APM Phone' });
+                    this.GridColumns.push({ dataField: 'ShiftTimeDetail', caption: 'Shift Time Detail' });
+
+
+                    //var url = 'https://api.example.com/endpoint';
+                    //var postData = {
+                    //	key1: 'value1',
+                    //	key2: 'value2'
+                    //};
+
+                    //// Make the POST request using Axios
+                    //axios.post(url, postData)
+                    //	.then(function (response) {
+                    //		// Handle successful response
+                    //		console.log('Response:', response.data);
+                    //	})
+                    //	.catch(function (error) {
+                    //		// Handle error
+                    //		console.error('Error:', error);
+                    //	});
+
+                },
+                updated() {
+
+                },
+                mounted() {
+                }
+            })
+
+            $(".nav-item").removeClass("active");
+            $("#liLookups").addClass("active");
+            $(".menu-item").removeClass("show");
+            $(".menu-item").removeClass("here");
+            $("#menuTemplateSetting").addClass("here");
+            $("#menuTemplateSetting").addClass("show");
+            $(".tab-pane").removeClass("active");
+            $(".tab-pane").removeClass("show");
+            $("#tabLookups").addClass("show");
+            $("#tabLookups").addClass("active");
+            $("#kt_customers_table").dataTable();
+        })
+    </script>
+
+}

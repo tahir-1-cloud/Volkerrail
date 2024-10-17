@@ -1,0 +1,165 @@
+﻿@using PRISM.DTO;
+@using PRISM.Models;
+@using Nancy.Json;
+@using PRISM.DTO.ReportsModels;
+@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO.Employeedto
+@using System.Security.Claims
+
+@model RootReportModel
+
+@{
+    bool IsRead = false;
+}
+@if (User.Identity.IsAuthenticated)
+{
+    var identity = User.Identity as ClaimsIdentity;
+
+    try
+    {
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            var currentObj = roleObject.Where(x => x.ModuleId == 25).FirstOrDefault();
+            if (currentObj != null)
+            {
+                IsRead = currentObj.ActionRoles.IsRead ?? false;
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+
+
+}
+@{
+    if (IsRead)
+    {
+        <table style="border-collapse:collapse;margin-left:5.1pt;width:100%" cellspacing="0">
+            <tr style="height:13pt">
+                <td style="width:150px">
+                </td>
+                <td style="text-align:center">
+                    <h4 style="text-decoration:underline;color:darkblue;margin-bottom:1px">VolkerRail Plant Shifts Report</h4>
+                </td>
+                <td style="width:150px">
+                </td>
+            </tr>
+        </table>
+        <table style="border-collapse:collapse;margin-left:5.1pt;width:100%" cellspacing="0">
+            <tr style="height:13pt">
+                <td style="width:5pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style="text-indent: 0pt; text-align: left; color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt;"><br /></p>
+                </td>
+                <td style="width:27pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style="text-indent: 0pt; text-align: left; color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt;">ID</p>
+                </td>
+                <td style="width:27pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 10pt; text-indent: 0pt; line-height: 8pt; text-align: left;">Reccy No</p>
+                </td>
+                <td style="width:37pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 3pt; text-indent: 0pt; text-align: left;">Day</p>
+                </td>
+                <td style="width:43pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 9pt; text-indent: 0pt; text-align: left;">Start & Finish</p>
+                </td>
+                <td style="width:83pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 5pt; text-indent: 0pt; line-height: 8pt; text-align: left;">M/C</p>
+                </td>
+                <td style="width:51pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-right: 17pt; text-indent: 0pt; line-height: 8pt; text-align: right;">mgr</p>
+                </td>
+                <td style="width:72pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 15pt; text-indent: 0pt; line-height: 8pt; text-align: left;">wrk</p>
+                </td>
+                <td style="width:72pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 9pt; text-indent: 0pt; line-height: 8pt; text-align: left;">Remarks</p>
+                </td>
+                <td style="width:58pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 8pt; text-indent: 0pt; line-height: 8pt; text-align: left;">Location</p>
+                </td>
+                <td style="width:60pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; line-height: 8pt; text-align: left;">ELR</p>
+                </td>
+                <td style="width:60pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; line-height: 8pt; text-align: left;">St F</p>
+                </td>
+                <td style="width:60pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; line-height: 8pt; text-align: left;">St T</p>
+                </td>
+                <td style="width:60pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; line-height: 8pt; text-align: left;">Company</p>
+                </td>
+                <td style="width:60pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; line-height: 8pt; text-align: left;">Div</p>
+                </td>
+                <td style="width:60pt;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; line-height: 8pt; text-align: left;">Comments</p>
+                </td>
+            </tr>
+            @{
+                if (Model.conductorChroneReport?.Count > 0)
+                {
+                    foreach (var item in Model.conductorChroneReport)
+                    {
+                        <tr style="height:17pt">
+                            <td style="width:5pt;border-top-style:solid;border-top-width:1pt">
+                                <p style="text-indent: 0pt;text-align: left;"><br /></p>
+                            </td>
+                            <td style="width:27pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;">@item.Id</p>
+                            </td>
+                            <td style="width:27pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: #F00; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 10pt; text-indent: 0pt; text-align: left;">@item.ReccyNo</p>
+                            </td>
+                            <td style="width:37pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 3pt; text-indent: 0pt; text-align: left;">@item.PpreDay</p>
+                            </td>
+                            <td style="width:43pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 10pt; text-indent: 0pt; text-align: left;">@item.StartDateAndFinish</p>
+                            </td>
+                            <td style="width:83pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 5pt; text-indent: 0pt; text-align: left;">@item.MachineNum</p>
+                            </td>
+                            <td style="width:51pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-right: 14pt; text-indent: 0pt; text-align: right;">@item.MachineMgr</p>
+                            </td>
+                            <td style="width:72pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 15pt; text-indent: 0pt; text-align: left;">@item.WorkDescription</p>
+                            </td>
+                            <td style="width:72pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 9pt; text-indent: 0pt; text-align: left;">@item.Remarks</p>
+                            </td>
+                            <td style="width:58pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 8pt; text-indent: 0pt; text-align: left;">@item.WorksiteDetails</p>
+                            </td>
+                            <td style="width:60pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; text-align: left;">@item.WorksiteELR</p>
+                            </td>
+                            <td style="width:60pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; text-align: left;">@item.InShortCode</p>
+                            </td>
+                            <td style="width:60pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; text-align: left;">@item.OutShortCode</p>
+                            </td>
+                            <td style="width:60pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; text-align: left;">@item.Customer</p>
+                            </td>
+                            <td style="width:60pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; text-align: left;">@item.Contractor</p>
+                            </td>
+                            <td style="width:60pt;border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: black; font-family: Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; padding-left: 11pt; text-indent: 0pt; text-align: left;">@item.PPrePlannedWork</p>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+
+        </table>
+    }
+}
+

@@ -1,0 +1,45 @@
+﻿@using PRISM.DTO;
+@using PRISM.Models
+@using Nancy.Json;
+@{
+    var serializer = new JavaScriptSerializer();
+}
+
+@model List<DistributionViewModel>
+
+ 
+        <tbody class="fw-semibold text-gray-600">
+            @{
+                if (Model?.Count > 0)
+                {
+                    for (int i = 0; i < Model.Count; i++)
+                    {
+
+                        var r = Model[i];
+                        <tr>
+                          
+                            <td>
+                                @((i + 1).ToString())
+                            </td>
+                            <td>
+                                <a v-on:click="Edit('@(serializer.Serialize(r))')" class="menu-link px-3">@r.EmailAddress</a>
+
+                            </td>
+                            <td>
+                                @r.TypeName
+                            </td>
+                            <td>
+                                @r.ActiveStatus
+                            </td>
+                            <td class="text-end">
+
+                                <a class="menu-link px-3" v-on:click="Delete(@r.Id.ToString())">Delete</a>
+
+                            </td>
+
+                        </tr>
+                    }
+                }
+            }
+
+        </tbody>

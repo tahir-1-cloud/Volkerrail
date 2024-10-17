@@ -1,0 +1,610 @@
+﻿@using PRISM.DTO;
+@using PRISM.Models;
+@using Nancy.Json;
+@using PRISM.DTO.ReportsModels;
+
+@model VSTPViewModel
+
+<table class="tableformat3" cellspacing="0" cellpadding="0" style="border: 0pt solid rgb(0, 0, 0); border-collapse: collapse;width:100%">
+    <tr>
+        <td>
+            <p style="font-size:12px;text-align:center">
+                <span style="font-family:Calibri"><b>WEEK NO:  @(string.IsNullOrEmpty(Model.LNEDetailModel?.WeekNo) ? "" : Model.LNEDetailModel?.WeekNo.Substring(1)) </b></span>
+            </p>
+        <td>
+            <p style="font-size:12px;text-align:center">
+                <span style="font-family:Calibri;text-decoration:underline">
+                    <b>OTM VSTP REQUEST FORM:</b><br />
+                    <b>Contact VRCC phone 01302 791187 Email VRCC@volkerrail.co.uk</b>
+                </span>
+            </p>
+        </td>
+        <td>
+            <p style="font-size:12px;text-align:center">
+                <span style="font-family:Calibri"><img src="https://devprism.azurewebsites.net/assets/media/logos/pdfreportlogo.PNG" style="width:150px" /></span>
+            </p>
+        </td>
+    </tr>
+</table>
+<table class="tableformat" cellspacing="0" cellpadding="0" style="border: 0.75pt solid rgb(0, 0, 0); border-collapse: collapse;width:100%; margin-top:20px;">
+    <tbody>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;text-align:right;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri;font-weight:bold">To:</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.MachineShiftVstpModel?.Vstpcontact</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Date Submitted</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.MachineShiftVstpModel?.ModifiedDate?.ToString("dd/MM/yyyy")</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Time</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">
+                        <span style="font-family:Calibri">@(Model.MachineShiftVstpModel?.ModifiedDate?.ToString("HH:mm"))</span>
+
+                    </span>
+
+                    @* <span style="font-family:Calibri">@((Model.MachineShiftVstpModel?.ModifiedDate?.Hour) + ":" + Model.MachineShiftVstpModel?.ModifiedDate?.Minute)</span> *@
+                </p>
+            </td>
+        </tr>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;text-align:right;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri;font-weight:bold">From:</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">VRCC</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Ref <b>@Model.MachineShiftVstpModel?.ShiftId</b></span>
+                </p>
+            </td>
+            <td colspan="3">
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"></span>
+                </p>
+            </td>
+
+        </tr>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;text-align:right;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri;font-weight:bold">Address:</span>
+                </p>
+            </td>
+            <td colspan="5">
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">ValkerRail Plant</span>
+                </p>
+            </td>
+
+        </tr>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;text-align:right;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri;font-weight:bold">Tel:</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">01302 791187</span> | <span style="font-family:Calibri">Email</span> | <span style="font-family:Calibri">VRCC@volkerrail.co.uk</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">TOPS LATA</span>
+                </p>
+            </td>
+            <td colspan="3">
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"></span>
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+<table class="tableformat" cellspacing="0" cellpadding="0" style="border: 0.75pt solid rgb(0, 0, 0); border-collapse: collapse;width:100%; margin-top:20px;">
+    <tbody>
+        <tr style=" ">
+
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Headcode:</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@(Model.MachineModel?.HeadCode)</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Day:</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@(Model.LNEDetailModel?.PpreDay)</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Date:</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.LNEDetailModel?.StartDate?.ToString("dd/MM/yyyy")</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>OTM Type:</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">
+                        @(string.IsNullOrEmpty(Model.MachineModel?.Type) ? "" : (Model.MachineModel?.Type.Split(' ').Length > 1 ? Model.MachineModel?.Type.Split(' ')[1] : Model.MachineModel?.Type))
+                    </span>
+                </p>
+            </td>
+        </tr>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Train Category</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">DC</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Sector</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">49</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Sub Sector</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">01</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Train Service Code</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">53694102</span>
+                </p>
+            </td>
+        </tr>
+    </tbody>
+
+</table>
+<table class="tableformat2" cellspacing="0" cellpadding="0" style="border: 0.75pt solid rgb(0, 0, 0); border-collapse: collapse;width:100%">
+    <tbody>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Origin LOC:</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.MachineShiftVstpModel?.OriginName</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Stanox:</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.MachineShiftVstpModel?.OriginStanox</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Requested Dep Time:</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.MachineShiftVstpModel?.OriginTime</span>
+                </p>
+            </td>
+
+        </tr>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Destination LOC:</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.MachineShiftVstpModel?.DestName</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Stanox:</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.MachineShiftVstpModel?.DestStanox</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Requested Arr Time:</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.MachineShiftVstpModel?.DestTime</span>
+                </p>
+            </td>
+
+        </tr>
+        <tr style=" ">
+            <td colspan="3">
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>Requested Route (Via) and Comments</b></span>
+                </p>
+            </td>
+            <td colspan="3">
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.LNEDetailModel?.PprePathTime</span>
+                </p>
+            </td>
+
+
+        </tr>
+        <tr style=" ">
+            <td colspan="6">
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">
+                        @(Model.MachineShiftVstpModel?.Comments + " ")
+                    </span>
+                </p>
+            </td>
+
+        </tr>
+    </tbody>
+</table>
+
+<table class="tableformat" cellspacing="0" cellpadding="0" style="border: 0.75pt solid rgb(0, 0, 0); border-collapse: collapse;width:100%; margin-top:20px;">
+    <tbody>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>DOO</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>*Yes/No</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Restrictions</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>N/A</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Dengerous Goods</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>N/A</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Load (Tonnes)</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">
+                        <b>
+                            @Model.MachineModel?.Weight
+                        </b>
+                    </span>
+                </p>
+            </td>
+
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Highest R/A</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.MachineModel?.Nrn1</span>
+                </p>
+            </td>
+        </tr>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Max Speed Of <br /> Slowest Vahicles</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>60</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">No of Vehicles</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>@Model.MachineShiftVstpModel?.NumberOfVehicles</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Length (SLUs)</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"></span>
+                </p>
+            </td>
+            <td colspan="2">
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>WON Item No:</b></span>
+                </p>
+            </td>
+            <td colspan="2">
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">@Model.LNEDetailModel?.WonNumber</span>
+                </p>
+            </td>
+
+        </tr>
+    </tbody>
+</table>
+<table class="tableformat2" cellspacing="0" cellpadding="0" style="border: 0.75pt solid rgb(0, 0, 0); border-collapse: collapse;width:100%">
+    <tbody>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">On Track Machine Type:</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>@Model.LNEDetailModel?.MachineType</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Number</span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"><b>@Model.LNEDetailModel?.MachineNum</b></span>
+                </p>
+            </td>
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Can be relied upon to operate Track Circuts</span>
+                </p>
+            </td>
+
+        </tr>
+        <tr style=" ">
+            <td>
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri">Machine Tel Contact No:</span>
+                </p>
+            </td>
+            <td colspan="2">
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"></span>
+                </p>
+            </td>
+            <td colspan="2">
+                <p style="font-size:11px;margin-top:4px;margin-bottom:4px">
+                    <span style="font-family:Calibri"></span>
+                </p>
+            </td>
+
+        </tr>
+    </tbody>
+</table>
+<div style="font-family: Verdana;">
+    <div>
+        <div style="padding: 1% 5%;">
+            <div style="width:150px; height:150px; border: solid 1px #000; position: absolute; margin-top: 55px; margin-left: 20px; background-color: #fff; text-align: center;">
+                <p style="color: #ED7014;"><b>WORK SITE</b></p>
+                <p style="color: #228b22;">@Model.LNEDetailModel?.WorksiteDetails</p>
+            </div>
+            <table cellspacing="0px" style="width:100%;padding:0px;">
+                <tr>
+                    <td></td>
+                    <td colspan="3" style="border:solid 1px #000;  padding:2px 5px; font-size: 11px;">INTERMEDIATE CALLING POINTS / WORK SITE</td>
+                </tr>
+                <tr>
+                    <th style="border:solid 1px #000; width:25%; text-align: left !important; padding:5px 5px; font-size: 11px;">LOCATION NAME</th>
+                    <th style="border:solid 1px #000; width:20%; text-align: left !important; padding:5px 5px; font-size: 11px;">STANOX</th>
+                    <th style="border:solid 1px #000; width:20%; text-align: left !important; padding:5px 5px; font-size: 11px;">ARR/DEP TIMES</th>
+                    <th style="border:solid 1px #000; width:35%; text-align: left !important; padding:5px 5px; font-size: 11px;">REMARKS/REVERSAL POINTS ETC</th>
+                </tr>
+                <tr>
+                    <td style="border:solid 1px #000; height: 30px !important;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                </tr>
+                <tr>
+                    <td style="border:solid 1px #000; height: 30px !important;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                </tr>
+                <tr>
+                    <td style="border:solid 1px #000; height: 30px !important;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                </tr>
+                <tr>
+                    <td style="border:solid 1px #000; height: 30px !important;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                </tr>
+                <tr>
+                    <td style="border:solid 1px #000; height: 30px !important;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                </tr>
+                <tr>
+                    <td style="border:solid 1px #000; height: 30px !important;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                    <td style="border:solid 1px #000;"><br></td>
+                </tr>
+            </table>
+        </div>
+        <div style="padding: 10px 4%; ">
+            <table cellspacing="0px" style="width:100%;padding:0px;">
+                <tbody>
+                    <tr>
+                        <td align="left" style="width:75%;padding:0px; border:0px !important; font-size: 12px;">Note - Network Rail to input all other timing, passing and TRUST points as required</td>
+                        <th align="right" style="width:25%;padding:0px; border:0px !important; font-size: 12px;">* Delete as applicable</th>
+
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- box -->
+        <div style="padding: 10px 5%;">
+            <div style="border: 2px solid black; padding: 0% 1%; font-size: 11px;">
+                <p>THE ABOVE ADDITIONAL TRAIN MOVEMENT TO THE PUBLISHED TIMETABLE IS REQUESTED TO RUN</p>
+                <table cellspacing="0px" style="width:100%;padding:0px;">
+                    <tbody>
+                        <tr>
+                            <td align="left" style="width:35%;padding:0px; border:0px !important;">REPRESENTATIVE NAME: &nbsp;&nbsp;<sup style="font-size: 100%;">VRCC</sup></td>
+                            <td align="left" style="width:65%;padding:0px; border:0px !important;">SIGNATURE: _______________________________</td>
+
+                        </tr>
+                        <tr>
+                            <td align="left" style="width:100%;padding:0px; border:0px !important;" colspan="2">POSITION/JOB TITLE: &nbsp;&nbsp;<sup style="font-size: 100%;">Duty Controller</sup></td>
+
+                        </tr>
+                    </tbody>
+                </table>
+                <hr style="border: 1px solid black;">
+                <span>RAILTRACK CONFIRMATION</span>
+                <p>The above additional train movement to the published timetable is &nbsp;&nbsp; AGREED / DECLINED</p>
+                <table cellspacing="0px" style="width:100%;padding:0px;">
+                    <tbody>
+                        <tr>
+                            <td align="left" style="width:45%;padding:0px; border:0px !important;">Train Reporting Number (UWTTID):</td>
+                            <td align="left" style="width:55%;padding:0px; border:0px !important;">Departure Time:</td>
+
+                        </tr>
+                        <tr>
+                            <td align="left" style="width:100%;padding: 1% 0%; border:0px !important;" colspan="2">Trust Schedule created &nbsp; YES / NO</td>
+
+                        </tr>
+                    </tbody>
+                </table>
+                <span>
+                    Train will run by zonal control arrangement and every endeavour will be made to meet the schedule requested but pathway and performance
+                    cannot be guaranteed.
+                </span>
+                <table cellspacing="0px" style="width:100%;padding: 1% 0%;">
+                    <tbody>
+                        <tr>
+                            <td align="left" style="width:45%;padding:0px;border:0px !important;">REPRESENTATIVE NAME:________________________</td>
+                            <td align="left" style="width:55%;padding:0px;border:0px !important;">SIGNATURE:____________________________</td>
+
+                        </tr>
+                    </tbody>
+                </table>
+                <table cellspacing="0px" style="width:100%;padding:0px;">
+                    <tbody>
+                        <tr>
+                            <td align="left" style="width:35%;padding:0px;border:0px !important;">Reference Number:</td>
+                            <td align="left" style="width:35%;padding:0px;border:0px !important;">Date & Time request received: DATE:</td>
+                            <td align="left" style="width:30%;padding:0px;border:0px !important;">TIME:</td>
+
+                        </tr>
+                    </tbody>
+                </table>
+                <table cellspacing="0px" style="width:100%;padding: 1% 0%;">
+                    <tbody>
+                        <tr>
+                            <td align="left" style="width:25%;padding:0px;border:0px !important;">TELEPHONE</td>
+                            <td align="left" style="width:30%;padding:0px;border:0px !important;">FAX</td>
+                            <td align="left" style="width:45%;padding:0px;border:0px !important;">TOPS LATA</td>
+
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+

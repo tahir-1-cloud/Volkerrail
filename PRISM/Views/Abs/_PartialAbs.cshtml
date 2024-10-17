@@ -1,0 +1,240 @@
+﻿@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO;
+@using PRISM.DTO.Employeedto
+@using PRISM.Models;
+@using Nancy.Json;
+@using System.Security.Claims
+@{
+    bool IsInsert = false;
+    bool IsEdit = false;
+    bool IsRead = false;
+    bool IsDelete = false;
+}
+@if (User.Identity.IsAuthenticated)
+{
+    var identity = User.Identity as ClaimsIdentity;
+
+    try
+    {
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            var currentObj = roleObject.Where(x => x.ModuleId == 23).FirstOrDefault();
+            if (currentObj != null)
+            {
+                IsInsert = currentObj.ActionRoles.IsInsert ?? false;
+                IsEdit = currentObj.ActionRoles.IsEdit ?? false;
+                IsRead = currentObj.ActionRoles.IsRead ?? false;
+                IsDelete = currentObj.ActionRoles.IsDelete ?? false;
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+
+
+}
+@{
+    var serializer = new JavaScriptSerializer();
+}
+
+@model EmployeeModel
+
+
+<div class="content flex-row-fluid" id="kt_content">
+    <!--begin::Contacts App- Add New Contact-->
+    <div class="row g-7">
+
+        <div class="col-lg-6 col-xl-3">
+            <!--begin::Contacts-->
+            <div class="card card-flush" id="kt_contacts_list">
+                <!--begin::Card header-->
+                <div class="card-header pt-7" id="kt_contacts_list_header">
+
+                    <!--end::Form-->
+                </div>
+                <!--end::Card header-->
+                <!--begin::Card body-->
+                <div class="card-body pt-5" id="kt_contacts_list_body">
+                    <div class="scroll-y me-n5 pe-5 h-300px h-xl-auto" style="max-height: 765px;">
+                        @{
+                            if (Model.EmployeeList?.Count > 0)
+                            {
+                                foreach (var emp in Model.EmployeeList)
+                                {
+                                    if (emp.EmployeeTypeId == Model.type || Model.type == 0)
+                                    {
+                                        <div class="d-flex flex-stack">
+                                            <!--begin::Details-->
+                                            <div class="d-flex align-items-center">
+                                                <!--begin::Avatar-->
+                                                <div class="symbol symbol-40px symbol-circle">
+                                                    <span class="symbol-label bg-light-warning text-warning fs-6 fw-bolder">
+                                                        @(
+                                                        emp.FirstName?.Substring(0, 1).ToUpper()
+                                                            )
+                                                    </span>
+                                                </div>
+                                                <!--end::Avatar-->
+                                                <!--begin::Details-->
+                                                <div class="ms-4">
+
+                                                    <a v-on:click="GetAbsance('@(serializer.Serialize(emp).Replace("'", "\\'"))')" id="@("anchor"+emp.Id)" class="fs-6 fw-bold text-hover-primary anchor">
+                                                        @(
+                                                        emp.FirstName + " " + emp.LastName
+                                                            )
+                                                    </a>
+
+                                                    <div class="fw-semibold fs-7 text-muted">@emp.JobTitle</div>
+                                                </div>
+                                                <!--end::Details-->
+                                            </div>
+                                            <!--end::Details-->
+                                        </div>
+                                        <!--end::User-->
+                                        <!--begin::Separator-->
+                                        <div class="separator separator-dashed d-none"></div>
+                                    }
+                                }
+                            }
+                        }
+
+
+                        <!--end::User-->
+                    </div>
+                    <!--end::List-->
+                </div>
+                <!--end::Card body-->
+            </div>
+            <!--end::Contacts-->
+        </div>
+        <!--end::Search-->
+        <!--begin::Content-->
+        <div class="col-xl-9">
+            <!--begin::Contacts-->
+            <div class="card card-flush h-lg-100">
+                <!--begin::Card header-->
+                <div class="card-header pt-7">
+                    <!--begin::Card title-->
+                    <div class="card-title">
+                        <i class="ki-duotone ki-badge fs-1 me-2">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                            <span class="path3"></span>
+                            <span class="path4"></span>
+                            <span class="path5"></span>
+                        </i>
+                        <h2>Absences</h2>
+                    </div>
+                    <h3>{{SelecrtedName}}</h3>
+                    <!--end::Card title-->
+                </div>
+                <!--end::Card header-->
+                <!--begin::Card body-->
+                <div class="card-body pt-5">
+                    @{
+                        if (IsRead)
+                        {
+                            <div id="gridAbsance" style="height:450px"></div>
+                        }
+                    }
+
+                </div>
+                <!--begin::Card body-->
+                <div class="card-body pt-1">
+                    <!--begin::Form body-->
+                    <form id="inputform" class="form fv-plugins-bootstrap5 fv-plugins-framework">
+                        <div class="row">
+                            <!--begin::Col-->
+                            <div class="col-sm-3">
+                                <label class="fs-6 fw-semibold form-label mt-3">
+                                    <span class="required">Leave Type</span>
+                                </label>
+                                <div class="fv-row mb-7">
+                                    <select class="form-control form-control-solid validate[required]" v-model="d.LeaveTypeId">
+                                        <option value=""> -- select --</option>
+                                        @{
+                                            if (Model.LeaveTypeList?.Count > 0)
+                                            {
+                                                for (int i = 0; i < Model.LeaveTypeList.Count; i++)
+                                                {
+                                                    var r = Model.LeaveTypeList[i];
+
+                                                    <option value="@(r.Id)"> @(r.Title) </option>
+
+                                                }
+                                            }
+                                        }
+                                        
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <label class="fs-6 fw-semibold form-label mt-3">
+                                    <span class="required">Reason</span>
+                                </label>
+                                <div class="fv-row mb-7">
+
+                                    <input type="text" class="form-control form-control-solid validate[required]" name="Reason" v-model="d.Reason" />
+                                    <!--end::Input-->
+                                </div>
+                                <!--end::Input group-->
+                            </div>
+                            <div class="col-sm-3">
+                                <label class="fs-6 fw-semibold form-label mt-3">
+                                    <span class="required">Date From</span>
+                                </label>
+                                <div class="fv-row mb-7">
+
+                                    <input type="text" class="form-control form-control-solid datepicker validate[required]" id="datefromString" name="DateFrom" v-model="d.DateFromString" />
+                                    <!--end::Input-->
+                                </div>
+                                <!--end::Input group-->
+                            </div>
+                            <div class="col-sm-3">
+                                <label class="fs-6 fw-semibold form-label mt-3">
+                                    <span class="required">Date To</span>
+                                </label>
+                                <div class="fv-row mb-7">
+
+                                    <input type="text" class="form-control form-control-solid datepicker validate[required]" id="dateToString" name="DateTo" v-model="d.DateToString" />
+                                    <!--end::Input-->
+                                </div>
+                                <!--end::Input group-->
+                            </div>
+                        </div>
+
+                        <div class="car-footer p-5" style="text-align:right">
+                            @{
+                                if (IsDelete)
+                                {
+                                    <button class="btn btn-warning" v-on:click="Delete($event)">Delete</button>
+                                }
+
+                                if (IsInsert)
+                                {
+                                    <button type="button" class="btn btn-primary" v-on:click="Insert($event)">
+                                        <span class="indicator-label">Save</span>
+                                        <span class="indicator-progress">
+                                            Please wait...
+                                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                        </span>
+                                    </button>
+                                }
+
+                            }
+                        </div>
+                    </form>
+                </div>
+                <!--end::Card body-->
+            </div>
+            <!--end::Contacts-->
+        </div>
+        <!--end::Content-->
+    </div>
+    <!--end::Contacts App- Add New Contact-->
+</div>
+<!--end::Post-->

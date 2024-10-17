@@ -1,0 +1,303 @@
+﻿@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO;
+@using PRISM.DTO.Employeedto
+@using PRISM.Models;
+@using Nancy.Json;
+@using System.Security.Claims
+@{
+    bool IsInsert = false;
+    bool IsEdit = false;
+    bool IsRead = false;
+    bool IsDelete = false;
+}
+@if (User.Identity.IsAuthenticated)
+{
+    var identity = User.Identity as ClaimsIdentity;
+
+    try
+    {
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            var currentObj = roleObject.Where(x => x.ModuleId == 9).FirstOrDefault();
+            if (currentObj != null)
+            {
+                IsInsert = currentObj.ActionRoles.IsInsert ?? false;
+                IsEdit = currentObj.ActionRoles.IsEdit ?? false;
+                IsRead = currentObj.ActionRoles.IsRead ?? false;
+                IsDelete = currentObj.ActionRoles.IsDelete ?? false;
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+
+
+}
+@{
+    string type = "Distributions";
+    var serializer = new JavaScriptSerializer();
+}
+@model DistributionModel
+<div id="apporg" class="d-flex flex-column-fluid align-items-start container-xxl">
+    <!--begin::Post-->
+    <div class="content flex-row-fluid" id="kt_content">
+        <!--begin::Card-->
+        <div class="card">
+            <!--begin::Card header-->
+            <div class="card-header border-0 pt-6">
+             
+                <!--begin::Card title-->
+                <!--begin::Card toolbar-->
+                <div class="card-toolbar">
+                    <!--begin::Toolbar-->
+                    <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                        @{
+                            if (IsEdit)
+                            {
+                                <button type="button" class="btn btn-primary" v-on:click="ShowLookup()">Add @type</button>
+                            }
+                        }
+
+                    </div>
+                </div>
+                <!--end::Card toolbar-->
+            </div>
+            <!--end::Card header-->
+            <!--begin::Card body-->
+            <div class="card-body pt-0">
+                <!--begin::Table-->
+                <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_customers_table">
+                    <thead>
+                        <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                            <th style="width:30px"></th>
+                            <th class="min-w-125px">Email Address</th>
+                            <th class="min-w-125px">Type</th>
+                            <th class="min-w-125px">Active Status</th>
+                            <th class="text-end min-w-70px">Actions</th>
+                        </tr>
+                    </thead>
+                    @{
+                        if (IsRead)
+                        {
+                            @await Html.PartialAsync("~/Views/Distributions/_PartialDisList.cshtml", Model?.DistributionList)
+                        }
+                    }
+                    <!--end::Table body-->
+                </table>
+                <!--end::Table-->
+            </div>
+            <!--end::Card body-->
+        </div>
+        <!--end::Card-->
+        <!--begin::Modals-->
+        <!--begin::Modal - Customers - Add-->
+        <div class="modal fade" id="lookupmodel" tabindex="-1" aria-hidden="true">
+            <!--begin::Modal dialog-->
+            <div class="modal-dialog modal-dialog-centered mw-650px">
+                <!--begin::Modal content-->
+                <div class="modal-content">
+                    <!--begin::Form-->
+                    <form id="inputform">
+                        <!--begin::Modal header-->
+                        <div class="modal-header" id="kt_modal_add_customer_header">
+                            <!--begin::Modal title-->
+                            <h2 class="fw-bold">Add @type</h2>
+                            <!--end::Modal title-->
+                            <!--begin::Close-->
+                            <div id="kt_modal_add_customer_close" v-on:click="ClosePopup()" class="btn btn-icon btn-sm btn-active-icon-primary">
+                                <i class="ki-duotone ki-cross fs-1">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                            </div>
+                            <!--end::Close-->
+                        </div>
+                        <!--end::Modal header-->
+                        <!--begin::Modal body-->
+                        <div class="modal-body py-10 px-lg-17">
+                            <!--begin::Scroll-->
+                            <div class="scroll-y me-n7 pe-7" id="kt_modal_add_customer_scroll" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#kt_modal_add_customer_header" data-kt-scroll-wrappers="#kt_modal_add_customer_scroll" data-kt-scroll-offset="300px">
+                                <!--begin::Input group-->
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Email Address</label>
+                                    <input type="text" class="form-control form-control-solid validate[required,custom[email]]" placeholder="" name="name" v-model="d.EmailAddress" />
+                                    <!--end::Input-->
+                                </div>
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Active</label>
+                                    <select class="form-control form-control-solid validate[required]" v-model="d.ActiveStatus">
+                                        <option value="Yes"> Yes</option>
+                                        <option value="No"> No</option>
+                                    </select>
+                                    <!--end::Input-->
+                                </div>
+                                <div class="fv-row mb-15">
+                                    <label class="required fs-6 fw-semibold mb-2">Distribution Types</label>
+                                    <select class="form-control form-control-solid validate[required]" v-model="d.TypeId">
+                                        <option value=""> -- select --</option>
+                                        @{
+                                            if (Model.LookupList?.Count > 0)
+                                            {
+                                                for (int i = 0; i < Model.LookupList.Count; i++)
+                                                {
+                                                    var r = Model.LookupList[i];
+
+                                                    <option value="@(r.Id)"> @(r.Name) </option>
+
+                                                }
+                                            }
+                                        }
+                                        <
+                                    </select>
+                                </div>
+                            </div>
+                            <!--end::Scroll-->
+                        </div>
+                        <!--end::Modal body-->
+                        <!--begin::Modal footer-->
+                        <div class="modal-footer flex-center">
+                            <!--begin::Button-->
+                            <button type="reset" id="kt_modal_add_customer_cancel" v-on:click="ClosePopup()" class="btn btn-light me-3">Discard</button>
+                            <!--end::Button-->
+                            <!--begin::Button-->
+                            @{
+                                if (IsInsert)
+                                {
+                                    <button type="button" id="kt_modal_add_customer_submit" class="btn btn-primary" v-on:click="Insert($event)">
+                                        <span class="indicator-label">Submit</span>
+                                        <span class="indicator-progress">
+                                            Please wait...
+                                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                        </span>
+                                    </button>
+                                }
+                            }
+                            <!--end::Button-->
+                        </div>
+                        <!--end::Modal footer-->
+                    </form>
+                    <!--end::Form-->
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!--end::Post-->
+</div>
+
+
+@section scripts {
+    <link href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script>
+        var objCommon = new Common();
+        $(document).ready(function () {
+
+
+            var app = new Vue({
+                el: '#apporg',
+                data: {
+                    DataList: [],
+                    d: {}
+                },
+                methods: {
+                    Delete(id) {
+                        var param = {
+                            Id: id
+                        };
+
+                        objCommon.AjaxCall("/Distributions/delete", JSON.stringify(param), "POST", true, function (response) {
+                            objCommon.ShowMessage("Deleted.", "success");
+                            location.reload();
+                        });
+                    },
+                    Edit(data) {
+                        var json = JSON.parse(data);
+                        this.d = {};
+                        //this.d=;
+                        this.d.EmailAddress = json.emailAddress;
+                        this.d.Id = json.id;
+                        this.d.TypeId = json.typeId;
+                        this.d.ActiveStatus = json.activeStatus;
+                        $("#lookupmodel").modal("show");
+                    },
+                    ShowLookup($event) {
+                        this.d = {};
+                        this.d.Id = 0;
+                        $("#lookupmodel").modal("show");
+                    },
+                    Insert($event) {
+                        if (!objCommon.Validate("#inputform"))
+                            return;
+
+
+                        var param = this.d;
+
+                        objCommon.AjaxCall("/Distributions/insert", JSON.stringify(param), "POST", true, function (response) {
+                            objCommon.ShowMessage("Added.", "success");
+
+                            $("#lookupmodel").modal("hide");
+                            location.reload();
+                        }, $event.currentTarget);
+
+                    },
+                    GetData($event) {
+
+
+                        objCommon.AjaxCall("/Distributions/GetData", $.param({ Type }), "GET", true, function (response) {
+                            console.log(response);
+                        }, $event == null ? null : $event.currentTarget);
+
+                    }
+                    ,
+                    ClosePopup() {
+                        $("#lookupmodel").modal("hide");
+                    }
+                },
+                created() {
+                    //GetData(null);
+                    //var url = 'https://api.example.com/endpoint';
+                    //var postData = {
+                    //	key1: 'value1',
+                    //	key2: 'value2'
+                    //};
+
+                    //// Make the POST request using Axios
+                    //axios.post(url, postData)
+                    //	.then(function (response) {
+                    //		// Handle successful response
+                    //		console.log('Response:', response.data);
+                    //	})
+                    //	.catch(function (error) {
+                    //		// Handle error
+                    //		console.error('Error:', error);
+                    //	});
+
+                },
+                updated() {
+
+                },
+                mounted() {
+                }
+            })
+
+
+            $(".nav-item").removeClass("active");
+            $("#liLookups").addClass("active");
+            $(".menu-item").removeClass("show");
+            $(".menu-item").removeClass("here");
+            $("#menuDistributions").addClass("here");
+            $("#menuDistributions").addClass("show");
+            $(".tab-pane").removeClass("active");
+            $("#tabLookups").addClass("active");
+            $(".tab-pane").removeClass("show");
+            $("#tabLookups").addClass("show");
+            $("#kt_customers_table").dataTable();
+        })
+    </script>
+
+}

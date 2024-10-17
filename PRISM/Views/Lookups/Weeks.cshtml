@@ -1,0 +1,400 @@
+﻿@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO;
+@using PRISM.DTO.Employeedto
+@using PRISM.Models;
+@using Nancy.Json;
+@using System.Security.Claims
+
+@{
+    bool IsInsert = false;
+    bool IsEdit = false;
+    bool IsRead = false;
+    bool IsDelete = false;
+}
+@if (User.Identity.IsAuthenticated)
+{
+    var identity = User.Identity as ClaimsIdentity;
+
+    try
+    {
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            var currentObj = roleObject.Where(x => x.ModuleId == 15).FirstOrDefault();
+            if (currentObj != null)
+            {
+                IsInsert = currentObj.ActionRoles.IsInsert ?? false;
+                IsEdit = currentObj.ActionRoles.IsEdit ?? false;
+                IsRead = currentObj.ActionRoles.IsRead ?? false;
+                IsDelete = currentObj.ActionRoles.IsDelete ?? false;
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+
+
+}
+@{
+    string type = "Week";
+
+    var serializer = new JavaScriptSerializer();
+}
+@model List<Week>
+<div id="apporg" class="d-flex flex-column-fluid align-items-start container-xxl">
+    <!--begin::Post-->
+    <div class="content flex-row-fluid" id="kt_content">
+        <!--begin::Card-->
+        <div class="card">
+            <!--begin::Card header-->
+            <div class="card-header border-0 pt-6">
+                <!--begin::Card title-->
+                
+                <!--begin::Card title-->
+                <!--begin::Card toolbar-->
+                <div class="card-toolbar">
+                    <!--begin::Toolbar-->
+                    <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                        @{
+                            if (IsInsert)
+                            {
+                                                <button type="button" class="btn btn-primary" v-on:click="ShowLookup()">Add @type</button>
+                            }
+                        }
+
+                    </div>
+                </div>
+                <!--end::Card toolbar-->
+            </div>
+            <!--end::Card header-->
+            <!--begin::Card body-->
+            <div class="card-body pt-0">
+                <!--begin::Table-->
+                <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_customers_table">
+                    <thead>
+                        <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                            <th style="width:30px"></th>
+                            <th class="min-w-125px">Title</th>
+                            <th class="min-w-125px">Start Date</th>
+                            <th class="min-w-125px">End Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="fw-semibold text-gray-600">
+                        @{
+                            if (Model?.Count > 0)
+                            {
+                                for (int i = 0; i < Model.Count; i++)
+                                {
+
+                                    var r = Model[i];
+                                                    <tr>
+                                                        <td>
+                                                            @((i + 1).ToString())
+                                                        </td>
+                                                        <td>
+                                                          
+                                                    @r.WeekNo
+                                                            
+
+                                                        </td>
+                                                        <td>
+                                                            @r.StartDate?.ToString("dd/MM/yyyy")
+                                                        </td>
+                                                        <td>
+                                                            @r.EndDate?.ToString("dd/MM/yyyy")
+                                                        </td>
+                                                      
+
+                                                       
+
+                                                    </tr>
+                                }
+                            }
+                        }
+
+                    </tbody>
+                    <!--end::Table body-->
+                </table>
+                <!--end::Table-->
+            </div>
+            <!--end::Card body-->
+        </div>
+        <!--end::Card-->
+        <!--begin::Modals-->
+        <!--begin::Modal - Customers - Add-->
+        <div class="modal fade" id="lookupmodel" tabindex="-1" aria-hidden="true">
+            <!--begin::Modal dialog-->
+            <div class="modal-dialog modal-dialog-centered mw-650px">
+                <!--begin::Modal content-->
+                <div class="modal-content">
+                 
+                        <!--begin::Modal header-->
+                        <div class="modal-header" id="kt_modal_add_customer_header">
+                            <!--begin::Modal title-->
+                            <h2 class="fw-bold">Add Weeks</h2>
+                            <!--end::Modal title-->
+                            <!--begin::Close-->
+                            <div id="kt_modal_add_customer_close" v-on:click="ClosePopup()" class="btn btn-icon btn-sm btn-active-icon-primary">
+                                <i class="ki-duotone ki-cross fs-1">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                            </div>
+                            <!--end::Close-->
+                        </div>
+                        <!--end::Modal header-->
+                        <!--begin::Modal body-->
+                        <div class="modal-body py-10 px-lg-17">
+                            <form id="inputform">
+                            <!--begin::Scroll-->
+                            <div class="scroll-y me-n7 pe-7" id="kt_modal_add_customer_scroll">
+                                <!--begin::Input group-->
+                                <div class="fv-row mb-4">
+                                    <label class="required fs-6 fw-semibold mb-2">Title</label>
+                                    <input type="text" class="form-control form-control-solid validate[required]" readonly="readonly" v-model="d.Title" />
+                                    <!--end::Input-->
+                                </div>
+                                <div class="fv-row mb-4">
+                                    <label class="required fs-6 fw-semibold mb-2">Start Date</label>
+                                    <input type="text" class="form-control form-control-solid datepicker validate[required]" id="dateStartDate" v-model="d.StartDate" />
+                                </div>
+                                <div class="fv-row mb-4">
+                                    <label class="required fs-6 fw-semibold mb-2">End Date</label>
+                                    <input type="text" class="form-control form-control-solid datepicker validate[required]" id="dateEndDate" v-model="d.EndDate" />
+                                </div>
+                            </div>
+                        </form>
+                            <!--end::Scroll-->
+                        </div>
+                        <!--end::Modal body-->
+                        <!--begin::Modal footer-->
+                        <div class="modal-footer flex-center">
+                            <!--begin::Button-->
+                            <button type="reset" id="kt_modal_add_customer_cancel" v-on:click="ClosePopup()" class="btn btn-light me-3">Discard</button>
+                            <!--end::Button-->
+                            <!--begin::Button-->
+                            @{
+                                if (IsInsert)
+                                {
+                                                    <button type="button" id="kt_modal_add_customer_submit" class="btn btn-primary" v-on:click="Insert($event)">
+                                                        <span class="indicator-label">Submit</span>
+                                                        <span class="indicator-progress">
+                                                            Please wait...
+                                                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                                        </span>
+                                                    </button>
+                                }
+                            }
+                            <!--end::Button-->
+                        </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!--end::Post-->
+</div>
+
+
+@section scripts {
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <link href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script>
+        var objCommon = new Common();
+        $(document).ready(function () {
+
+
+            var app = new Vue({
+                el: '#apporg',
+                data: {
+                    DataList: [],
+                    d: {}
+                },
+                methods: {
+                    Delete(id) {
+                        var param = {
+                            Id: id
+                        };
+
+                        objCommon.AjaxCall("/Lookups/deleteWeek", JSON.stringify(param), "POST", true, function (response) {
+                            objCommon.ShowMessage("Deleted.", "success");
+                            location.reload();
+                        });
+                    },
+                    Edit(data) {
+                        var dxthis = this;
+                        var json = JSON.parse(data);
+                        console.log(json);
+                        this.d = {};
+                        //this.d=;
+                        this.d.Title = json.title;
+                        this.d.Id = json.id;
+                        const datestart = new Date(json.startDate);
+                        const dateend = new Date(json.endDate);
+                        this.d.StartDate = datestart.toISOString().split('T')[0];
+                        this.d.EndDate = dateend.toISOString().split('T')[0];
+
+                        $("#lookupmodel").modal("show");
+                        $("#dateStartDate").datepicker({
+                            dateFormat: 'dd-mm-yy',//check change
+                            onSelect: function (date) {
+                                dxthis.d.StartDate = date;
+                                dxthis.$forceUpdate();
+                                var parts = date.split("-");
+                                var dated = new Date(parts[2], parts[1] - 1, parts[0]);
+                                let maxDate = addOneYear(dated);
+                                let minDate = new Date(dated);
+                                console.log(minDate);
+                                console.log(maxDate);
+                                $("#dateEndDate").datepicker("option", "minDate", minDate);
+
+                                // Set the maxDate of Datepicker 2 to one year after the selected date in Datepicker 1
+                                // let maxDate = addOneYear(date, true);
+                                // console.log(maxDate);
+                                $("#dateEndDate").datepicker("option", "maxDate", maxDate);
+                            },
+                        });
+                        $("#dateEndDate").datepicker({
+                            dateFormat: 'dd-mm-yy',//check change
+                            onSelect: function (date) {
+                                dxthis.d.EndDate = date;
+                                dxthis.$forceUpdate();
+                            },
+                        });
+
+                        function addOneYear(dateString, subtractDay) {
+                            let date = new Date(dateString);
+                            date.setFullYear(date.getFullYear() + 1);
+
+                            if (subtractDay) {
+                                // Subtract one day to set the maxDate to the last day of the selected year
+                                date.setDate(date.getDate() - 1);
+                            }
+
+                            return date;
+                        }
+                    },
+                    ShowLookup($event) {
+                        var dxthis = this;
+                        dxthis.d = {};
+                        dxthis.d.Id = 0;
+                        dxthis.d.Title = "Week";
+                        $("#lookupmodel").modal("show");
+                        $("#dateStartDate").datepicker({
+                            dateFormat: 'dd-mm-yy',//check change
+                            onSelect: function (date) {
+                                dxthis.d.StartDate = date;
+                                dxthis.$forceUpdate();
+                                var parts = date.split("-");
+                                var dated = new Date(parts[2], parts[1] - 1, parts[0]);
+                                let maxDate = addOneYear(dated);
+                                let minDate = new Date(dated);
+                                console.log(minDate);
+                                console.log(maxDate);
+                                $("#dateEndDate").datepicker("option", "minDate", minDate);
+
+                                // Set the maxDate of Datepicker 2 to one year after the selected date in Datepicker 1
+                               // let maxDate = addOneYear(date, true);
+                               // console.log(maxDate);
+                                $("#dateEndDate").datepicker("option", "maxDate", new Date(maxDate.setDate(maxDate.getDate() + 6)));
+
+                            },
+                        });
+                        $("#dateEndDate").datepicker({
+                            dateFormat: 'dd-mm-yy',//check change
+                            onSelect: function (date) {
+                                dxthis.d.EndDate = date;
+                                dxthis.$forceUpdate();
+                            },
+                        });
+
+                        function addOneYear(dateString, subtractDay) {
+                            let date = new Date(dateString);
+                            date.setFullYear(date.getFullYear() + 1);
+
+                            if (subtractDay) {
+                                // Subtract one day to set the maxDate to the last day of the selected year
+                                date.setDate(date.getDate() - 1);
+                            }
+
+                            return date;
+                        }
+                    },
+                    Insert($event) {
+                        if (!objCommon.Validate("#inputform"))
+                            return;
+
+
+                        this.d.StartDate=$("#dateStartDate").val();
+                        this.d.EndDate = $("#dateEndDate").val();
+                        var param = this.d;
+
+                        objCommon.AjaxCall("/Lookups/insertWeek", JSON.stringify(param), "POST", true, function (response) {
+                            objCommon.ShowMessage("Added.", "success");
+
+                            $("#lookupmodel").modal("hide");
+                            location.reload();
+                        }, $event.currentTarget);
+
+                    },
+                    GetData($event) {
+
+
+                        objCommon.AjaxCall("/Lookups/GetData", $.param({ Type }), "GET", true, function (response) {
+                            console.log(response);
+                        }, $event == null ? null : $event.currentTarget);
+
+                    }
+                    ,
+                    ClosePopup() {
+                        $("#lookupmodel").modal("hide");
+                    }
+                },
+                created() {
+                    //GetData(null);
+                    //var url = 'https://api.example.com/endpoint';
+                    //var postData = {
+                    //	key1: 'value1',
+                    //	key2: 'value2'
+                    //};
+
+                    //// Make the POST request using Axios
+                    //axios.post(url, postData)
+                    //	.then(function (response) {
+                    //		// Handle successful response
+                    //		console.log('Response:', response.data);
+                    //	})
+                    //	.catch(function (error) {
+                    //		// Handle error
+                    //		console.error('Error:', error);
+                    //	});
+
+                },
+                updated() {
+
+                },
+                mounted() {
+                }
+            })
+
+            $(".nav-item").removeClass("active");
+            $("#liLookups").addClass("active");
+            $(".menu-item").removeClass("show");
+            $(".menu-item").removeClass("here");
+            $("#menuWeeks").addClass("here");
+            $("#menuWeeks").addClass("show");
+            $(".tab-pane").removeClass("active");
+            $(".tab-pane").removeClass("show");
+            $("#tabLookups").addClass("show");
+            $("#tabLookups").addClass("active");
+            $("#kt_customers_table").dataTable();
+        })
+    </script>
+
+}

@@ -1,0 +1,57 @@
+/*.pt-lg-6 {
+    padding-top: 0.5rem !important;
+}
+.content {
+    padding: 8px 0 0 0;
+}
+.card .card-header{
+    padding:0px 8px 0px 8px
+}
+.card .card-body {
+    padding: 0px 8px 0px 8px
+}
+.table.gy-5 td, .table.gy-5 th {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}*/
+.h-lg-70px {
+    height: 52px !important;
+}
+.header-extended .header {
+    height: 120px;
+}
+.header-fixed.header-extended .wrapper {
+    padding-top: 120px;
+}
+.dropdown.show > .form-control.form-control-solid, .form-control.form-control-solid.active, .form-control.form-control-solid.focus, .form-control.form-control-solid:active, .form-control.form-control-solid:focus {
+    border-color: #e1e1e1;
+}
+
+.form-control, .form-select {
+    border-color: #cfcbcb !important
+}
+.form-check.form-check-solid .form-check-input:not(:checked) {
+    background-color: #cfcbcb !important
+}
+.form-floating > .form-control, .form-floating > .form-control-plaintext, .form-floating > .form-select {
+    height: calc(3rem + 2px) !important;
+    /* line-height: 0.25; */
+}
+.form-floating{
+    margin-bottom:5px !important
+}
+.table.gy-4 td, .table.gy-4 th {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+.table-bordered{
+    width:100% !important;
+    border-color:darkgray !important
+}
+#popupgrid .card .card-header {
+    min-height: 15px !important;
+    padding: 0rem 0rem !important;
+}
+#popupgrid .card .card-body {
+    padding: 1rem 0rem !important;
+}

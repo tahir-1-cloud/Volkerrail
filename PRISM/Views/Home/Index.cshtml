@@ -1,0 +1,2387 @@
+﻿@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO;
+@using PRISM.DTO.Employeedto
+@using PRISM.Models;
+@using Nancy.Json;
+@using System.Security.Claims
+@{
+    bool IsInsert = false;
+    bool IsEdit = false;
+    bool IsRead = false;
+    bool IsDelete = false;
+    int RoleId = 0;
+    string fullName = "";
+}
+@if (User.Identity.IsAuthenticated)
+{
+
+    try
+    {
+        var identity = User.Identity as ClaimsIdentity;
+
+        // Get the user's object identifier (OID) from the ClaimsPrincipal
+        var userId = identity.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        Claim claim = identity?.Claims.FirstOrDefault(x => x.Type == "name");
+        fullName = claim?.Value;
+
+
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            RoleId = roleObject[0].RoleId;
+            var currentObj = roleObject.Where(x => x.ModuleId == 1).FirstOrDefault();
+            if (currentObj != null)
+            {
+                IsInsert = currentObj.ActionRoles.IsInsert ?? false;
+                IsEdit = currentObj.ActionRoles.IsEdit ?? false;
+                IsRead = currentObj.ActionRoles.IsRead ?? false;
+                IsDelete = currentObj.ActionRoles.IsDelete ?? false;
+            }
+        }
+
+        if (RoleId == 4)
+        {
+            RoleId = 0;
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+
+
+}
+@{
+    ViewData["Title"] = "Home page";
+
+    string type = Context.Request.Query["type"];
+}
+
+
+@model HomeFilterModel
+<style>
+    #standfilter label {
+        margin-bottom: 15px
+    }
+
+    .offcanvas-backdrop.show {
+        display: none !important;
+    }
+
+    .yesno {
+        background-color: none !important
+    }
+
+    fieldset {
+        min-width: 0;
+        padding: 10px;
+        margin: 10px;
+        border: 1px #e3dede solid;
+        border-radius: 11px;
+    }
+
+    }
+
+    .symbol-label {
+        max-height: 30px !important;
+        padding: 5px 30px !important;
+        color: #fff !important;
+    }
+
+    .dx-toolbar {
+        background-color: transparent !important;
+    }
+
+    .dx-header-row {
+        background-color: #009ED6;
+        color: white;
+    }
+
+    #GridMileStone .dx-datagrid-nowrap {
+        background-color: lightyellow !important
+    }
+
+    .lightblue {
+        background-color: lightblue !important;
+    }
+
+    .lightpink {
+        background-color: #f3d5d9 !important
+    }
+
+    .lightyellow {
+        background-color: lightyellow !important
+    }
+
+    .middleblue {
+        background-color: dodgerblue !important
+    }
+
+    .dx-row {
+        border-bottom-color: #ddd !important;
+    }
+
+    .colorTemper {
+        color: mediumpurple !important
+    }
+
+    .colorRRV {
+        color: limegreen !important
+    }
+
+    .colorCrane {
+        color: black !important
+    }
+
+    .colorTransit {
+        color: hotpink !important
+    }
+
+    .colorWork {
+        color: saddlebrown !important
+    }
+
+    .colorClear {
+        color: sandybrown !important
+    }
+
+    .text-muted {
+        color: dodgerblue !important
+    }
+
+    .form-select {
+        padding: 5px 10px !important;
+    }
+
+    #filterarea .dx-button .dx-button-content, #btnExportLog .dx-button-content {
+        padding: 0px !important
+    }
+
+    #filterarea .dx-button, #btnExportLog {
+        border-radius: 8px !important
+    }
+
+    .fc-time-wrap .fc-time {
+        display: none !important;
+    }
+
+    #commenttable input.form-control {
+        border-radius: 5px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+
+    #commenttable .btnadd {
+        margin-top: 18px;
+        padding: 7px;
+        width: 50px;
+        border-radius: 5px;
+    }
+
+    #commenttable .btndel {
+        padding: 3px;
+        width: 50px;
+        border-radius: 5px;
+    }
+
+    #GridMileStone .dx-datagrid-header-panel {
+        display: none
+    }
+</style>
+<div id="apporg" class="d-flex flex-column-fluid align-items-start container-fluid">
+    <!--begin::Post-->
+    <div class="content flex-row-fluid" id="kt_content">
+        <!--begin::Card-->
+        <div class="card">
+
+            @{
+                if (RoleId != 0)
+                {
+                    <!--begin::Card header-->
+                    <div class="card-header border-0">
+
+                        <div class="row pt-5" id="filterarea" style="width: 100%;">
+                            <div class="col-sm-2">
+                                <label>Current View</label>
+                                <select class="form-select form-select-solid" id="ddlTemplate" @@change="SearchFilter('Template')">
+                                    @{
+                                        if (Model.TemplateList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.TemplateList)
+                                            {
+                                                if (Model.FilterHistory?.Template == @temp.Id.ToString())
+                                                {
+                                                    <option value="@temp.Id" selected="selected">@temp.TemplateName</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@temp.Id">@temp.TemplateName</option>
+                                                }
+
+                                            }
+                                        }
+                                    }
+
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <label>
+                                    Show me Shifts for Week
+                                </label>
+                                <select class="form-select form-select-solid" id="ddlFromWeek" @@change="SearchFilter('FromWeek')">
+                                    <option></option>
+                                    @{
+                                        if (Model.WeekList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.WeekList)
+                                            {
+                                                if (Model.FilterHistory?.FromWeek == @temp.Id.ToString())
+                                                {
+                                                    <option value="@temp.Id" selected="selected">@temp.Title</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@temp.Id">@temp.Title</option>
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <label>
+                                    To
+                                </label>
+                                <select class="form-select form-select-solid" id="ddlToWeek" @@change="SearchFilter('ToWeek')">
+                                    <option></option>
+                                    @{
+                                        if (Model.WeekList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.WeekList)
+                                            {
+                                                if (Model.FilterHistory?.ToWeek == @temp.Id.ToString())
+                                                {
+                                                    <option value="@temp.Id" selected="selected">@temp.Title</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@temp.Id">@temp.Title</option>
+                                                }
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <label>
+                                    Show machine number
+                                </label>
+                                <select class="form-select form-select-solid" id="ddlMachineNumber" @@change="SearchFilter('MachineNumber')">
+                                    <option></option>
+                                    @{
+                                        if (Model.MachinesList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.MachinesList)
+                                            {
+                                                if (Model.FilterHistory?.MachineNumber == @temp.Number)
+                                                {
+                                                    <option value="@temp.Number" selected="selected">@temp.Number</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@temp.Number">@temp.Number</option>
+                                                }
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <label>
+                                    Show me this machine status
+                                </label>
+                                <select class="form-select form-select-solid" id="ddlMachineStatus" @@change="SearchFilter('MachineStatus')">
+                                    <option></option>
+                                    @{
+                                        if (Model.StatusList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.StatusList)
+                                            {
+                                                if (temp.LookupType == "Statuses")
+                                                {
+                                                    if (Model.FilterHistory?.MachineStatus == @temp.Name)
+                                                    {
+                                                        <option value="@temp.Name" selecte="selected">@temp.Name</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@temp.Name">@temp.Name</option>
+                                                    }
+                                                }
+
+
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-sm-2">
+
+                                <label>
+                                    Show me Shifts with status
+                                </label>
+                                <select class="form-select form-select-solid" id="ddlShiftStatus" @@change="SearchFilter('ShiftStatus')">
+                                    <option></option>
+                                    @{
+                                        if (Model.StatusList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.StatusList)
+                                            {
+                                                if (temp.LookupType == "ShiftStatus")
+                                                {
+                                                    if (Model.FilterHistory?.ShiftStatus == @temp.Name)
+                                                    {
+                                                        <option value="@temp.Name" selecte="selected">@temp.Name</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@temp.Name">@temp.Name</option>
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-sm-2 pt-5">
+                                <label>
+                                    Show me Shifts with Machine Type
+                                </label>
+                                <select class="form-select form-select-solid" id="ddlMachineType" @@change="SearchFilter('MachineType')">
+                                    <option></option>
+                                    @{
+                                        if (Model.MachinesList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.MachinesList.Select(x => x.Type).Distinct().ToList())
+                                            {
+                                                <option value="@temp">@temp</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-sm-2 pt-5">
+                                <label>
+                                    Show me Shifts with Staff
+                                </label>
+                                <select class="form-select form-select-solid" id="ddlStaff" @@change="SearchFilter('Staff')">
+                                    <option></option>
+                                    @{
+                                        if (Model.AbsanceModel.EmployeeList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.AbsanceModel.EmployeeList)
+                                            {
+                                                <option value="@temp.Id">@temp.FirstName @temp.LastName</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-sm-2 pt-5">
+                                <label>
+                                    Search By Location ↵
+                                </label>
+                                <input type="text" class="form-control" id="txtLocationSearch" placeholder="Search By Location ↵" @@keyup.enter="handleEnterKey" />
+                            </div>
+                            <div class="col-sm-6 pt-10">
+
+                                <button class="btn btn-primary btn-sm" v-on:click="StandardFiltersPopup()">Standard Filters</button>
+                                <button class="btn btn-primary btn-sm" v-on:click="SearchFilter('VRCCToday')" fdprocessedid="wz4o0c">VRCC (Today)</button>
+                                <button class="btn btn-primary btn-sm" id="btnAllRecordExport" v-on:click="ExportAllRecords($event)">Export All Records Shown</button>
+                                <!--- <button class="btn btn-primary btn-sm" id="btnSelectedRecordExport">Export Selected Records</button>--->
+                                <button class="btn btn-primary btn-sm" v-on:click="ResetFilters($event)">Reset Filters</button>
+
+                            </div>
+                        </div>
+
+
+
+                    </div>
+                    <!--end::Card header-->
+                    <!--begin::Card body-->
+                    <div class="card-body py-2 mt-2">
+                        <div id="gridContainer" style="height:600px"></div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="col-md-5" style="padding-right: 0px">
+                            <div class="dataTables_info" id="DataTableId_info" role="status" aria-live="polite">Showing {{FirstRec}} to {{LastRec}} of {{TotalRecords}} entries</div>
+                        </div>
+                        <div class="col-md-7" style="padding-right: 0px;">
+                            <div style="float:right" id="divPaginationAll"></div>
+                        </div>
+                    </div>
+                    <!--end::Card body-->
+                }
+                else
+                {
+                    <div class="card-body p-0">
+                        <!--begin::Wrapper-->
+                        <div class="card-px text-center py-20 my-10">
+                            <!--begin::Title-->
+                            <h2 class="fs-2x fw-bold mb-10">You do not have permissions.</h2>
+                            <!--end::Title-->
+                            <!--begin::Description-->
+                            <p class="text-gray-500 fs-4 fw-semibold mb-10">
+                                You do not have permissions to access the system.<br>
+                                Please contact system administrator to gain access
+                            </p>
+                            <a class="btn btn-primary" v-on:click="OpenOutlook()">Email Now</a>
+                        </div>
+                    </div>
+                }
+            }
+
+        </div>
+        <!--end::Card-->
+    </div>
+
+    <div class="modal fade" id="absanceModel" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-dialog-centered mw-600px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" id="kt_modal_add_customer_header">
+                    <div id="kt_modal_add_customer_close" v-on:click="CloseAbsancePopup()" class="btn btn-icon btn-sm btn-active-icon-primary">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <span>From Date</span>
+                            <input type="text" class="form-control" readonly v-model="Absance.FromDate" />
+                        </div>
+                        <div class="col-md-6">
+                            <span>To Date</span>
+                            <input type="text" class="form-control" readonly v-model="Absance.ToDate" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <span>Leave Type</span>
+                            <input type="text" class="form-control" readonly v-model="Absance.LeaveType" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <span>Leave Reason</span>
+                            <input type="text" class="form-control" readonly v-model="Absance.Reason" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="shiftModel" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered mw-1000px">
+
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <span>Name</span>
+                            <input type="text" class="form-control" readonly="readonly" v-model="RosterShift.DriverName" />
+                            <span>Location</span>
+                            <input type="text" class="form-control" readonly="readonly" v-model="RosterShift.ShiftLocation" />
+                            <span>Description</span>
+                            <input type="text" class="form-control" v-model="RosterShift.Description" />
+                        </div>
+                        <div class="col-sm-6">
+                            <span>PS</span>
+                            <input type="text" class="form-control" readonly="readonly" v-model="RosterShift.StartDateTime" />
+                            <span>PF</span>
+                            <input type="text" class="form-control" readonly="readonly" v-model="RosterShift.FinishDateTime" />
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" v-on:click="SaveDescription($event)">OK</button>
+                    <button type="button" class="btn btn-primary" v-on:click="CloseShiftPopup()">Close</button>
+                    <button type="button" class="btn btn-primary" id="ShiftDetailButton" v-on:click="OpenShiftDetail()">Shift Log</button>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="ShiftDetail" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-fullscreen p-9">
+            <!--begin::Modal content-->
+            <div class="modal-content modal-rounded">
+                <div class="modal-header" style="padding-top:8px;padding-bottom:8px">
+                    <div class="header-menu flex-column align-items-stretch flex-lg-row">
+                        <!--begin::Menu-->
+                        <div class="menu menu-rounded menu-column menu-lg-row menu-root-here-bg-desktop menu-active-bg menu-title-gray-700 menu-state-primary menu-arrow-gray-400 fw-semibold align-items-stretch flex-grow-1 px-2 px-lg-0" id="#kt_header_menu" data-kt-menu="true">
+                            <!--begin:Menu item-->
+                            <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2">
+                                <!--begin:Menu link-->
+                                <a v-on:click="ShowVSTPPopup()">
+                                    <span class="menu-link py-3">
+                                        <span class="menu-title">VSTP</span>
+                                        <span class="menu-arrow d-lg-none"></span>
+                                    </span>
+                                </a>
+                                <a v-on:click="ChangeLogPopup('ChangeLog')">
+                                    <span class="menu-link py-3">
+                                        <span class="menu-title">Change Log</span>
+                                        <span class="menu-arrow d-lg-none"></span>
+                                    </span>
+                                </a>
+                                <a v-on:click="AuditLogPopup('Audit')">
+                                    <span class="menu-link py-3">
+                                        <span class="menu-title">Audit Log</span>
+                                        <span class="menu-arrow d-lg-none"></span>
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                        <!--end::Menu-->
+                    </div>
+                </div>
+                <div class="modal-body scroll-y">
+                    <div class="d-flex flex-column-fluid align-items-start container-fluid">
+                        <!--begin::Post-->
+                        <div class="content flex-row-fluid" id="kt_content" style="padding:8px 0px 0px 0px">
+                            <!--begin::Row-->
+                            <div class="row gy-5 g-xl-10">
+                                <!--begin::Col-->
+                                <div class="col-xxl-12">
+                                    <!--begin::Row-->
+                                    <div class="row gx-5 gx-xl-10">
+                                        <!--begin::Col-->
+                                        <div class="col-sm-3">
+                                            <span style="font-size: 10px;">Machine Number</span>
+                                            <select class="form-select form-select-solid" id="ddlMachineNumber" v-model="d.MachineNum" @@change="ChangeMachineNumber(d.MachineNum)">
+                                                @{
+                                                    if (Model.MachinesList?.Count > 0)
+                                                    {
+                                                        var listNumber = Model.MachinesList.Select(x => x.Number).Distinct().ToList();
+
+                                                        foreach (var temp in listNumber)
+                                                        {
+                                                            <option value="@temp">@temp</option>
+                                                        }
+                                                    }
+                                                }
+
+                                            </select>
+
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control text-gray-800 fw-bold lightblue" id="floatingInputValue" readonly="readonly" placeholder="" v-model="d.Id" />
+                                                <label for="floatingInputValue">MUF</label>
+                                            </div>
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control text-gray-800 fw-bold" id="floatingWonNumber" placeholder="" v-model="d.WonNumber" />
+                                                <label for="floatingWonNumber">WON No.</label>
+                                            </div>   
+                                            
+                                        </div>
+                                        <!--end::Col-->
+                                        <!--begin::Col-->
+                                        <div class="col-sm-3">
+                                            <div class="row">
+                                                <div class="col-sm-12" style="padding-bottom:2px">
+                                                    <span style="font-size: 10px;">Machine Type</span>
+                                                    <input type="text" class="form-control text-gray-800 fw-bold" id="txtMachineType" readonly="readonly" v-model="d.MachineType" />
+
+                                                </div>
+
+                                                <div class="col-6" style="padding-right:2px">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold lightblue shiftdetaildate" autocomplete="off" id="shiftdetaildate" placeholder="" v-model="d.StartDateTime" />
+                                                        <label for="shiftdetaildate">Start Date  <span style="color:red">*</span></label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6" style="padding-right:2px">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold lightblue shiftfinishdate" autocomplete="off" id="shiftfinishdate" placeholder="" v-model="d.FinishDateTime" />
+                                                        <label for="shiftfinishdate">Finish Date  <span style="color:red">*</span></label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6" style="padding-right:2px">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold lightblue" autocomplete="off" id="shiftWorkSiteRef" placeholder="" v-model="d.Ppsreference" />
+                                                        <label for="shiftWorkSiteRef">Worksite Ref </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6" style="padding-right:2px">
+                                                    <span style="font-size: 10px;">Shift Status</span>
+                                                    <select class="form-select form-select-solid" id="ddlShiftStatus" v-model="d.Shift">
+
+                                                        @{
+                                                            if (Model.StatusList?.Count > 0)
+                                                            {
+                                                                foreach (var temp in Model.StatusList)
+                                                                {
+                                                                    if (temp.LookupType == "ShiftStatus")
+                                                                    {
+                                                                        <option value="@temp.Name">@temp.Name</option>
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    </select>
+
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="row mb-1">
+                                                <!--begin::Col-->
+                                                <div class="col-6" style="padding-right:2px;padding-bottom:2px">
+                                                    <span style="font-size: 10px;">Site</span>
+                                                    <input type="text" class="form-control text-gray-800 fw-bold lightblue" v-model="d.WorksiteDetails" />
+
+                                                </div>
+                                                <div class="col-3" style="padding-right:2px">
+                                                    <span style="font-size: 10px;">Yard Out</span>
+                                                    <select class="form-select form-select-solid" id="ddlFromLocation" v-model="d.YardOut">
+
+                                                        @{
+                                                            if (Model.LocationList?.Count > 0)
+                                                            {
+                                                                foreach (var temp in Model.LocationList)
+                                                                {
+                                                                // <option value="@temp.Name">@temp.Name</option>
+                                                                    <option value="@temp.Name">@temp.Name.ToUpper()</option>
+                                                                }
+                                                            }
+                                                        }
+
+                                                    </select>
+                                                    <!--end::Input group-->
+                                                </div>
+                                                <!--end::Col-->
+                                                <!--begin::Col-->
+                                                <div class="col-3" style="padding-right:2px;padding-left:2px">
+                                                    <!--begin::Input group-->
+                                                    <span style="font-size: 10px;">Yard In</span>
+                                                    <select class="form-select form-select-solid" id="ddlToLocation" v-model="d.YardIn">
+
+                                                        @{
+                                                            if (Model.LocationList?.Count > 0)
+                                                            {
+                                                                foreach (var temp in Model.LocationList)
+                                                                {
+                                                                // <option value="@temp.Name">@temp.Name</option>
+                                                                    <option value="@temp.Name">@temp.Name.ToUpper()</option>
+                                                                }
+                                                            }
+                                                        }
+
+                                                    </select>
+                                                    <!--end::Input group-->
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col-3" style="padding-right:2px">
+                                                    <!--begin::Input group-->
+                                                    <div class="form-floating">
+                                                        <input type="time" class="form-control text-gray-800 fw-bold lightblue timechangeEvent" id="floatingStartTime" pattern="[0-9]{2}:[0-9]{2}" placeholder="00.00" v-model="d.StartTime" />
+                                                        <label for="floatingStartTime">Start Time  <span style="color:red">*</span></label>
+                                                    </div>
+                                                    <!--end::Input group-->
+                                                </div>
+                                                <!--end::Col-->
+                                                <!--begin::Col-->
+                                                <div class="col-3" style="padding-right:2px;padding-left:2px">
+                                                    <!--begin::Input group-->
+                                                    <div class="form-floating">
+                                                        <input type="time" class="form-control text-gray-800 fw-bold lightblue timechangeEvent" id="floatingFinishTime" placeholder="00.00" v-model="d.FinishTime" />
+                                                        <label for="floatingFinishTime">Finish Time  <span style="color:red">*</span></label>
+                                                    </div>
+                                                    <!--end::Input group-->
+                                                </div>
+                                                <div class="col-4" style="padding-right:2px;">
+                                                    <!--begin::Input group-->
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold lightblue" id="floatingInputValue" placeholder="00.00" v-model="d.Customer" />
+                                                        <label for="floatingInputValue">Comp</label>
+                                                    </div>
+                                                    <!--end::Input group-->
+                                                </div>
+
+                                                <div class="col-2" style="padding-right:2px">
+                                                    <!--begin::Input group-->
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold lightblue" readonly id="floatingDay" v-model="d.PpreDay" />
+                                                        <label for="floatingDay">Day</label>
+                                                    </div>
+                                                    <div class="form-floating">
+                                                    </div>
+                                                    <!--end::Input group-->
+                                                </div>
+                                                <!--end::Col-->
+                                            </div>
+                                            <div class="row mb-1">
+
+                                                <div class="col-2">
+                                                    <!--begin::Input group-->
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold lightblue" id="floatingInputValue" readonly="readonly" placeholder="00.00" v-model="d.WeekNo" />
+                                                        <label for="floatingInputValue">Week</label>
+                                                    </div>
+                                                    <!--end::Input group-->
+                                                </div>
+                                                <div class="col-2" style="padding-right:2px;padding-left:2px">
+                                                    <!--begin::Input group-->
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold lightblue" id="floatingInputValue" readonly="readonly" placeholder="00.00" v-model="d.ShiftNo" />
+                                                        <label for="floatingInputValue">Shifts</label>
+                                                    </div>
+                                                    <div class="form-floating">
+                                                    </div>
+                                                    <!--end::Input group-->
+                                                </div>
+
+                                                <div class="col-2" style="padding-left:2px">
+                                                    <!--begin::Input group-->
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold lightblue" id="floatingPlannedHours" readonly="readonly" />
+                                                        <label for="floatingPlannedHours">Planned Hr. </label>
+                                                    </div>
+                                                    <!--end::Input group-->
+                                                </div>
+                                                <div class="col-2" style="padding-left:2px">
+                                                    <!--begin::Input group-->
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold lightblue" id="floatingPprePLField" v-model="d.PprePlfield" />
+                                                        <label for="floatingPprePLField">Remarks</label>
+                                                    </div>
+                                                    <div class="form-floating">
+                                                    </div>
+                                                    <!--end::Input group-->
+                                                </div>
+                                                <div class="col-2" style="padding-right:2px">
+
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold" id="floatingInputValue" placeholder="00.00" v-model="d.PprePathTime" />
+                                                        <label for="floatingInputValue">Path Time</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-2" style="padding-left:2px">
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control text-gray-800 fw-bold" readonly="readonly" id="floatingInputValue" placeholder="00.00" v-model="d.HeadCode" />
+                                                        <label for="floatingInputValue">Head Code</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row gx-5 gx-xl-10" id="popupgrid">
+                                        <div class="col-sm-6 mb-xl-10">
+
+
+                                            <div class="card card-flush">
+                                                <!--begin::Header-->
+                                                <div class="card-header">
+                                                    <span class="card-label fw-bold text-gray-800">Crew Manager</span>
+                                                </div>
+                                                <!--end::Header-->
+                                                <!--begin::Body-->
+                                                <div class="card-body py-3">
+                                                    <div id="GridCrewManager" style="height:180px"></div>
+                                                </div>
+                                                <!--end::Body-->
+                                            </div>
+
+                                            <div class="card card-flush">
+                                                <!--begin::Header-->
+                                                <div class="card-header">
+                                                    <span class="card-label fw-bold text-gray-800">Crew</span>
+                                                </div>
+                                                <!--end::Header-->
+                                                <!--begin::Body-->
+                                                <div class="card-body py-3">
+                                                    <div id="GridCrewOperator" style="height:180px"></div>
+                                                </div>
+                                                <!--end::Body-->
+                                            </div>
+
+                                            <div class="card card-flush">
+                                                <!--begin::Header-->
+                                                <div class="card-header">
+                                                    <!--begin::Title-->
+                                                    <span class="card-label fw-bold text-gray-800">Driver</span>
+
+                                                </div>
+                                                <!--end::Header-->
+                                                <!--begin::Body-->
+                                                <div class="card-body py-3">
+                                                    <div id="GridDriver" style="height:180px"></div>
+                                                </div>
+                                                <!--end::Body-->
+                                            </div>
+
+                                            <div class="card card-flush">
+                                                <!--begin::Header-->
+                                                <div class="card-header">
+                                                    <!--begin::Title-->
+                                                    <span class="card-label fw-bold text-gray-800">Conductor/Supplier</span>
+                                                    <span class="card-label fw-bold text-gray-800" style="background-color:darkorange;cursor:pointer" v-on:click="MedicationModel()">OTM Driver Booking on Arrangements (TOP 16)</span>
+                                                </div>
+                                                <!--end::Header-->
+                                                <!--begin::Body-->
+                                                <div class="card-body py-3">
+                                                    <div id="GridConductor" style="height:180px"></div>
+                                                </div>
+                                                <!--end::Body-->
+                                            </div>
+
+                                            <div class="card card-flush">
+                                                <!--begin::Header-->
+                                                <div class="card-header">
+                                                    <!--begin::Title-->
+                                                    <span class="card-label fw-bold text-gray-800">Assessor (if applicable)</span>
+                                                </div>
+                                                <!--end::Header-->
+                                                <!--begin::Body-->
+                                                <div class="card-body py-3">
+                                                    <div id="GridAssesor" style="height:180px"></div>
+                                                </div>
+                                                <!--end::Body-->
+                                            </div>
+
+
+                                        </div>
+
+                                        <div class="col-sm-6 mb-5 mb-xl-10">
+
+
+                                            <div class="row mb-1">
+                                                <div class="col-12">
+                                                    <div class="form-floating">
+                                                        <textarea type="text" class="form-control lightyellow" style="height:80px !important" id="floatingShiftTimeDetail" v-model="d.ShiftTimeDetail">
+                                                        </textarea>
+                                                        <label for="floatingShiftTimeDetail">Shift Time Detail</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col-12 col-lg-9">
+                                                    <label>Log Entry Templates</label>
+                                                    <ul role="tablist" class="nav nav-pills nav-pills-custom mb-3">
+
+                                                        <li class="nav-item mb-3 me-3 me-lg-6" v-on:click="LogEntry('Tamper')" style="margin-right:0rem !important;cursor:pointer">
+                                                            <div class="symbol symbol-50px me-2">
+                                                                <span class="symbol-label" style="background-color:mediumpurple">
+
+                                                                    Tamper
+                                                                </span>
+                                                            </div>
+
+                                                        </li>
+                                                        <li class="nav-item mb-3 me-3 me-lg-6" v-on:click="LogEntry('RRV')" style="margin-right:0rem !important;cursor:pointer">
+                                                            <div class="symbol symbol-50px me-2">
+                                                                <span class="symbol-label" style="background-color:limegreen">
+
+                                                                    RRV
+                                                                </span>
+                                                            </div>
+                                                        </li>
+                                                        <li class="nav-item mb-3 me-3 me-lg-6" v-on:click="LogEntry('Crane')" style="margin-right:0rem !important;cursor:pointer">
+                                                            <div class="symbol symbol-50px me-2">
+                                                                <span class="symbol-label" style="background-color:yellow">
+
+                                                                    Crane
+                                                                </span>
+                                                            </div>
+                                                        </li>
+                                                        <li class="nav-item mb-3 me-3 me-lg-6" v-on:click="LogEntry('Transit')" style="margin-right:0rem !important;cursor:pointer">
+                                                            <div class="symbol symbol-50px me-2">
+                                                                <span class="symbol-label" style="background-color:hotpink">
+
+                                                                    Transit
+                                                                </span>
+                                                            </div>
+                                                        </li>
+                                                        <li class="nav-item mb-3 me-3 me-lg-6" v-on:click="LogEntry('Work')" style="margin-right:0rem !important;cursor:pointer">
+                                                            <div class="symbol symbol-50px me-2">
+                                                                <span class="symbol-label" style="background-color:saddlebrown">
+
+                                                                    Work
+                                                                </span>
+                                                            </div>
+                                                        </li>
+                                                        <li class="nav-item mb-3 me-3 me-lg-6" v-on:click="LogEntry('Clear')" style="margin-right:0rem !important;cursor:pointer">
+                                                            <div class="symbol symbol-50px me-2">
+                                                                <span class="symbol-label" style="background-color:sandybrown">
+
+                                                                    Clear
+                                                                </span>
+                                                            </div>
+                                                        </li>
+
+                                                    </ul>
+                                                </div>
+                                                <div class="col-12 col-lg-3">
+                                                    <div style="padding-right:2px">
+                                                        <span style="font-size: 10px;">work completed</span>
+                                                        <select class="form-select form-select-solid" id="ddlwork" v-model="d.WorkCompleted">
+                                                            <option value="yes">Yes</option>
+                                                            <option value="no" selected>No</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                           
+                                            <div class="card card-flush">
+
+                                                <div class="card-body py-3">
+                                                    <div id="GridMileStone" class="lightyellow" style="height:375px"></div>
+                                                    <table class="table table-bordered" style="width:100%;display:none">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width:35%;background:#009ED6;color:white">
+                                                                    Milestone Activity
+                                                                </th>
+                                                                <th style="width:15%;background:#009ED6;color:white">
+                                                                    Planned
+                                                                </th>
+                                                                <th style="width:15%;background:#009ED6;color:white">
+                                                                    Actual
+                                                                </th>
+                                                                <th style="width:35%;background:#009ED6;color:white">
+                                                                    Comments
+                                                                </th>
+                                                            </tr>
+
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td colspan="4" style="padding:8px">
+                                                                    <input type="text" class="inputmilestone" value="test test" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="padding:8px">
+                                                                    <input type="text" class="inputmilestone" value="test test" />
+                                                                </td>
+                                                                <td style="padding:8px">
+                                                                    <input type="text" class="inputmilestone" value="test test" />
+                                                                </td>
+                                                                <td style="padding:8px">
+                                                                    <input type="text" class="inputmilestone" value="test test" />
+                                                                </td>
+                                                                <td style="padding:8px">
+                                                                    <input type="text" class="inputmilestone" value="test test" />
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <!--end::Body-->
+                                            </div>
+                                            <div class="card card-flush">
+                                                <!--begin::Header-->
+                                                <div class="card-header">
+                                                    <span class="card-label fw-bold text-gray-800">Contact Types (PICOP, ES, TQS, Site Contact)</span>
+                                                </div>
+                                                <!--end::Header-->
+                                                <!--begin::Body-->
+                                                <div class="card-body py-3">
+                                                    <div id="GridCombine" style="height:150px"></div>
+                                                </div>
+                                                <!--end::Body-->
+                                            </div>
+
+                                            <div class="row gx-5 gx-xl-10">
+                                                <div class="col-sm-12">
+                                                    <div class="form-floating">
+                                                        <textarea type="text" class="form-control lightyellow" id="floatingInputValue" style="height:110px !important" v-model="d.PprePlannedWork">
+                                                        </textarea>
+                                                        <label for="floatingInputValue">Planned Work</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-12">
+                                                    <div class="form-floating">
+                                                        <textarea type="text" class="form-control " id="floatingInputValue" style="height:110px !important" v-model="d.PpreInternalComments">
+                                                        </textarea>
+                                                        <label for="floatingInputValue">Internal Comments</label>
+                                                    </div>
+
+                                                </div>
+
+
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col-6" style="padding-right:2px">
+                                                    <div class="form-floating">
+                                                        <textarea type="text" class="form-control lightyellow" style="height:80px !important" id="floatingInputValue" v-model="d.PpreFailureComments">
+                                                        </textarea>
+                                                        <label for="floatingInputValue">Plant Failure/Comments</label>
+                                                    </div>
+
+
+
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-floating">
+                                                        <textarea type="text" class="form-control lightyellow" style="height:80px !important" id="floatingInputValue" v-model="d.PpreSummary">
+                                                        </textarea>
+                                                        <label for="floatingInputValue">Summary</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+
+                        </div>
+                        <!--end::Post-->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" v-on:click="ClosePopup()">Close</button>
+
+                    @{
+                        if (RoleId != 11)
+                        {
+                            if (IsInsert)
+                            {
+                                <button class="btn btn-primary" v-on:click="Insert($event)">Save Changes</button>
+                            }
+                        }
+
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="FileUploadeModel" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-dialog-centered mw-650px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-body py-10">
+                    <div id="drag-drop-area"></div>
+                </div>
+                <!--end::Modal body-->
+                <!--begin::Modal footer-->
+                <div class="modal-footer flex-center">
+                    <!--begin::Button-->
+                    <button type="reset" id="kt_modal_add_customer_cancel" v-on:click="ClosePopup()" class="btn btn-light me-3">Discard</button>
+                    <!--end::Button-->
+                    <!--begin::Button-->
+                    <button type="button" id="kt_modal_add_customer_submit" class="btn btn-primary" v-on:click="ImportFile($event)">
+                        <span class="indicator-label">Submit</span>
+                        <span class="indicator-progress">
+                            Please wait...
+                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                        </span>
+                    </button>
+                    <!--end::Button-->
+                </div>
+                <!--end::Modal footer-->
+                <!--end::Form-->
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="DriverMedication" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-dialog-centered mw-800px">
+
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!--begin::Modal title-->
+                    <h2>Driver Questions</h2>
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <div class="modal-body p-5">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <select id="ddlDriverMedication" v-model="q.DriverId" style="width:100px" @@change="MedicationModel('dropdown')">
+                                <option v-for="dept in DriverData" v-bind:value="dept.EmployeeId">
+                                    {{dept.FullName}}
+                                </option>
+                            </select>
+                            @*     <select style="width:200px">
+                            <option selected value="{{q.driverId}}">{{q.driverName}}</option>
+                            </select>*@
+                        </div>
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-md-12" style="text-align:center;color:red">
+                            <h4>Driver Bookings on Arrangements</h4>
+                        </div>
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-md-12" style="text-align:center;background-color:blue;color:white;padding-top:10px">
+                            <h4 style="color:white">{{q.DriverName}}</h4>
+                        </div>
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-sm-3" style="text-align:center;background-color:#78f0f7;padding-top:10px">
+                            <h4>{{d.MachineNum}}</h4>
+                        </div>
+                        <div class="col-sm-5" style="text-align:center;background-color:#78f0f7;padding-top:10px;margin: 0px 31px;">
+                            <h4>{{d.StartDateTime}}</h4>
+                        </div>
+                        <div class="col-sm-3" style="text-align:center;background-color:#78f0f7;padding-top:10px">
+                            <h4>{{d.StartTime}}</h4>
+                        </div>
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-md-12" style="text-align:center;background-color:#78f0f7;padding-top:10px">
+                            <h4>{{d.WorksiteDetails}}</h4>
+                        </div>
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-md-12" style="text-align:left">
+                            <p>
+                                All Team Leaders when booking on, either at a depot or remotely must contact the VolkerRail
+                                Control Center (VRCC) at the time of booking on.
+
+
+                            <p>
+                                The VRCC  Duty Controller must complete and record the preset questions for each driver from
+                                information provided by the Team Leader on every occasion.
+                            </p>
+
+                            <p>The information required by the VRCC Duty Controller is:  </p>
+
+                        </div>
+                    </div>
+                    <div class="stepper stepper-pills stepper-column d-flex flex-column flex-xl-row flex-row-fluid" id="kt_modal_create_app_stepper" data-kt-stepper="true">
+
+                        <div class="flex-row-fluid py-lg-5 px-lg-15">
+
+                            <div class="current">
+                                <div class="w-100">
+                                    <div class="fv-row">
+
+                                        <div class="fv-row fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
+                                            <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fs-7 text-muted">
+                                                        </span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <label class=" yesno" style="margin-right:35px;background-color:none">Yes</label>
+                                                    <label class=" yesno" style="background-color:none">No</label>
+
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <!--begin:Option-->
+                                            <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fs-7 text-muted">
+                                                            Establish that the driver has had a minimum of 12 hours rest since their last turn of
+                                                            duty
+                                                        </span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="question1" v-model="q.Question1" v-bind:value="false" style="margin-right:35px">
+                                                    <input class="form-check-input" type="radio" name="question1" v-model="q.Question1" v-bind:value="true">
+
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <!--begin:Option-->
+
+                                            <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fs-7 text-muted">
+                                                            Please ensure you activate Flight Only mode and setup AARK. Remember to place your mobile device in a bag out of reach
+                                                        </span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="question10" v-model="q.Question10" v-bind:value="false" style="margin-right:35px">
+                                                    <input class="form-check-input" type="radio" name="question10" v-model="q.Question10" v-bind:value="true">
+
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fs-7 text-muted">
+                                                            Is the driver in receipt of, and understands the requirements of all issued operational
+                                                            notices related to their turn duty (inluding any late notices, etc.)
+                                                        </span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="question2" v-model="q.Question2" v-bind:value="false" style="margin-right:35px">
+                                                    <input class="form-check-input" type="radio" name="question2" v-model="q.Question2" v-bind:value="true">
+
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fs-7 text-muted">Is the driver taking any prescribed or non-prescribed medication?</span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="question3" v-model="q.Question3" v-bind:value="false" style="margin-right:35px">
+                                                    <input class="form-check-input" type="radio" name="question3" v-model="q.Question3" v-bind:value="true">
+
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fs-7 text-muted">Is the driver under the influence of Alcohol or Drugs?</span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="question4" v-model="q.Question4" v-bind:value="false" style="margin-right:35px">
+                                                    <input class="form-check-input" type="radio" name="question4" v-model="q.Question4" v-bind:value="true">
+
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fs-7 text-muted">Is the driver possession of the correct and valid certification for their turn of duty?</span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="question5" v-model="q.Question5" v-bind:value="false" style="margin-right:35px">
+                                                    <input class="form-check-input" type="radio" name="question5" v-model="q.Question5" v-bind:value="true">
+
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fs-7 text-muted">Is the driver possession of the correct PPE required for their turn of duty?</span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="question6" v-model="q.Question6" v-bind:value="false" style="margin-right:35px">
+                                                    <input class="form-check-input" type="radio" name="question6" v-model="q.Question6" v-bind:value="true">
+
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fs-7 text-muted">Is the driver required to wear spectacles?</span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="question7" v-model="q.Question7" v-bind:value="false" style="margin-right:35px">
+                                                    <input class="form-check-input" type="radio" name="question7" v-model="q.Question7" v-bind:value="true">
+
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fs-7 text-muted">If Yes to the above, is the driver in possession of their spectacles</span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="question8" v-model="q.Question8" v-bind:value="false" style="margin-right:35px">
+                                                    <input class="form-check-input" type="radio" name="question8" v-model="q.Question8" v-bind:value="true">
+
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+
+
+
+
+
+                                            <div class="fv-plugins-message-container invalid-feedback"></div>
+                                        </div>
+                                        <!--end:Options-->
+                                    </div>
+                                    <!--end::Input group-->
+                                </div>
+                            </div>
+
+                        </div>
+                        <!--end::Content-->
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-md-12" style="text-align:left">
+                            <p>
+                                This information must then be transferred to the relevant Plant Log on the database system.
+                                Where there is any doubts as to the drivers ability to answer all of the above questions
+                                Satisfactory, the driver must be instructed not to continue and the incident must be
+                                escalated via the VolkerRail on-cell process.
+                            </p>
+
+                        </div>
+                        <div class="col-sm-3" style="text-align:left">
+                            Action
+                        </div>
+                        <div class="col-sm-9" style="text-align:left">
+                            OTM Driver
+                        </div>
+                        <div class="col-sm-7" style="text-align:left">
+                            DRIVERS QUESTIONS ANSWERS SATISFACTORY?
+                        </div>
+                        <div class="col-sm-3" style="text-align:left">
+                            <select v-model="q.IsSetisfied">
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row p-1">
+                        <div class="col-md-12" style="text-align:left">
+                            <span>Comments</span>
+                            <textarea class="form-control" style="height:100px" v-model="q.Comments">
+
+                            </textarea>
+                        </div>
+
+                    </div>
+                    <!--end::Stepper-->
+                </div>
+                <!--end::Modal body-->
+                <!--begin::Modal footer-->
+                <div class="modal-footer flex-center">
+
+                    <button type="button" id="kt_modal_add_customer_submit" class="btn btn-primary" v-on:click="SaveMedication($event)">
+                        <span class="indicator-label">Submit</span>
+                        <span class="indicator-progress">
+                            Please wait...
+                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                        </span>
+                    </button>
+                    <!--end::Button-->
+                </div>
+                <!--end::Modal footer-->
+                <!--end::Form-->
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="ShiftStatusModel" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-dialog-centered mw-650px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-body py-2">
+                    <label>
+                        Update Shift Status
+                    </label>
+                    <select class="form-select form-select-solid" id="ddlShiftStatus2">
+                        <option></option>
+                        @{
+                            if (Model.StatusList?.Count > 0)
+                            {
+                                foreach (var temp in Model.StatusList)
+                                {
+                                    if (temp.LookupType == "ShiftStatus")
+                                    {
+                                        <option value="@temp.Name">@temp.Name</option>
+                                    }
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="modal-footer flex-center">
+                    <button type="reset" id="kt_modal_add_customer_cancel" v-on:click="ClosePopup()" class="btn btn-light me-3">Discard</button>
+                    <button type="button" id="kt_modal_add_customer_submit" class="btn btn-primary" v-on:click="SaveShiftStatus($event)">
+                        <span class="indicator-label">Submit</span>
+                        <span class="indicator-progress">
+                            Please wait...
+                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                        </span>
+                    </button>
+                    <!--end::Button-->
+                </div>
+                <!--end::Modal footer-->
+                <!--end::Form-->
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="VSTPPopup" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-dialog-centered mw-800px">
+
+            <div class="modal-content" style="box-shadow:0px 0px 10px 0px">
+                <div class="modal-header" style="padding-top:8px;padding-bottom:8px">
+                    <!--begin::Modal title-->
+                    <h2>VSTP</h2>
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <div class="modal-body p-2">
+                    <fieldset>
+                        <legend>Shift Details (Read Only):</legend>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <input type="text" readonly class="form-control text-gray-800 fw-bold" id="floatingInputValue" placeholder="" v-model="d.WorksiteDetails" />
+                                    <label for="floatingInputValue">Location.</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" readonly class="form-control text-gray-800 fw-bold" id="floatingInputValue" placeholder="" v-model="d.MachineNum" />
+                                    <label for="floatingInputValue">Machine No.</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" readonly class="form-control text-gray-800 fw-bold" id="floatingInputValue" placeholder="" v-model="d.YardOut" />
+                                    <label for="floatingInputValue">Stabled From.</label>
+                                </div>
+
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" readonly class="form-control text-gray-800 fw-bold" id="floatingInputValue" placeholder="" v-model="d.YardIn" />
+                                    <label for="floatingInputValue">To.</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" readonly class="form-control text-gray-800 fw-bold" id="floatingInputValue" placeholder="" v-model="dReal.StartDateTime" />
+                                    <label for="floatingInputValue">Start.</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" readonly class="form-control text-gray-800 fw-bold" id="floatingInputValue" placeholder="" v-model="dReal.FinishDateTime" />
+                                    <label for="floatingInputValue">Finish.</label>
+                                </div>
+
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" readonly class="form-control text-gray-800 fw-bold" id="floatingInputValue" placeholder="" v-model="d.PpreDay" />
+                                    <label for="floatingInputValue">Shift.</label>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>VSTP Details:</legend>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <select class="form-select" id="ddlVSTPContact" v-model="VSTP.Vstpcontact">
+                                    <option></option>
+                                    @{
+                                        if (Model.StatusList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.StatusList)
+                                            {
+                                                if (temp.LookupType == "VSTPContact")
+                                                {
+                                                    <option value="@temp.Name">@temp.Name</option>
+                                                }
+
+
+                                            }
+                                        }
+                                    }
+
+                                </select>
+
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control text-gray-800 fw-bold" id="floatingInputValue" placeholder="" v-model="VSTP.HeadCode" />
+                                    <label for="floatingInputValue">Head Code.</label>
+                                </div>
+                            </div>
+                        </div>
+                        <fieldset>
+                            <legend>Stabling Origin:</legend>
+                            <div class="row">
+                                <div class="col-md-2">
+
+                                    <select class="form-select select2" id="ddlOriginLoc" v-model="VSTP.OriginLoc" @@change="ChangeShortCode(VSTP.OriginLoc,'OriginLoc')">
+                                        <option></option>
+                                        <option v-for="route in RoutesList" v-bind:value="route.ShortCode">{{route.ShortCode}}</option>
+                                    </select>
+
+
+
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control text-gray-800 fw-bold" id="floatingOriginName" placeholder="" v-model="VSTP.OriginName" />
+                                        <label for="floatingOriginName">Name.</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control text-gray-800 fw-bold" id="floatingOriginStanox" placeholder="" v-model="VSTP.OriginStanox" />
+                                        <label for="floatingOriginStanox">Stanox.</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <input type="time" class="form-control text-gray-800 fw-bold" id="floatingOriginTime" placeholder="" v-model="VSTP.OriginTime" />
+                                        <label for="floatingOriginTime">Time.</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <div class="row">
+                                <legend>Stabling Destination:</legend>
+                                <div class="col-md-2">
+
+
+                                    <select class="form-select select2" id="ddlDestLoc" v-model="VSTP.DestLoc" @@change="ChangeShortCode(VSTP.DestLoc,'DestLoc')">
+                                        <option></option>
+                                        <option v-for="route in RoutesList" v-bind:value="route.ShortCode">{{route.ShortCode}}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control text-gray-800 fw-bold" id="floatingDestName" placeholder="" v-model="VSTP.DestName" />
+                                        <label for="floatingDestName">Name.</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control text-gray-800 fw-bold" id="floatingDestStanox" placeholder="" v-model="VSTP.DestStanox" />
+                                        <label for="floatingDestStanox">Stanox.</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <input type="time" class="form-control text-gray-800 fw-bold" id="floatingDestTime" placeholder="" v-model="VSTP.DestTime" />
+                                        <label for="floatingDestTime">Time.</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </fieldset>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control text-gray-800 fw-bold" id="floatingInputValue" style="width:200px" placeholder="" v-model="VSTP.NumberOfVehicles" />
+                                    <label for="floatingInputValue">Number of Vehicles.</label>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <textarea type="text" class="form-control" style="height:80px !important" id="floatingInputValue" v-model="VSTP.Comments">
+                                                            </textarea>
+                                    <label for="floatingInputValue">Route Comment</label>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <!--end::Stepper-->
+                </div>
+                <!--end::Modal body-->
+                <!--begin::Modal footer-->
+                <div class="modal-footer flex-center">
+
+                    <button type="button" id="kt_modal_add_customer_submit" class="btn btn-primary" v-on:click="SaveVSTPSDetail($event)">
+                        <span class="indicator-label">Print</span>
+                        <span class="indicator-progress">
+                            Please wait...
+                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                        </span>
+                    </button>
+                    <button type="button" id="kt_modal_add_customer_submit" class="btn btn-primary" v-on:click="SaveVSTPSDetail($event)">
+                        <span class="indicator-label">Preview</span>
+                        <span class="indicator-progress">
+                            Please wait...
+                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                        </span>
+                    </button>
+                    <!--end::Button-->
+                </div>
+                <!--end::Modal footer-->
+                <!--end::Form-->
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modelCol" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered mw-650px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-body py-10">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul id="filecol" class="todo-list ui-sortable" style="list-style:none">
+
+                                <li v-for="col in FileColumns" class="ui-state-default" :id="col.FilesColName" style="height:35px">
+                                    <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>
+                                    {{col.FilesColName}}
+                                </li>
+
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul id="headercol" class="todo-list ui-sortable" style="list-style:none">
+
+                                <li v-for="col in HeaderCol" class="ui-state-default" :id="col" style="height:35px">
+                                    <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>
+                                    {{col}}
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer flex-center">
+                    <button type="button" class="btn btn-sm btn-primary" v-on:click="ImportFileData($event)">Save Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="StandardFilters" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered mw-650px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" style="padding-top:8px;padding-bottom:8px">
+                    <!--begin::Modal title-->
+                    <h2>Standard Filters</h2>
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <div class="modal-body py-10">
+                    <div class="row" id="standfilter">
+                        <div class="col-md-6">
+                            <label class="checkbox">
+                                <input type="checkbox" v-model="search.OTM" />
+                                <span></span>
+                                Omit OTM
+                            </label>
+                            <br />
+                            <label class="checkbox">
+                                <input type="checkbox" v-model="search.OTPM" />
+                                <span></span>
+                                Omit POM
+                            </label>
+                            <br />
+                            <label class="checkbox">
+                                <input type="checkbox" v-model="search.OTT" />
+                                <span></span>
+                                Omit RMC
+                            </label>
+                            <br />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="checkbox">
+                                <input type="checkbox" v-model="search.ACT" />
+                                <span></span>
+                                Omit Workshops
+                            </label> <br />
+
+                            <label class="checkbox">
+                                <input type="checkbox" v-model="search.ShiftCaped" />
+                                <span></span>
+                                Omit Caped
+                            </label> <br />
+                            <label class="checkbox">
+                                <input type="checkbox" v-model="search.ShiftCancelled" />
+                                <span></span>
+                                Omit Cancelled
+                            </label> <br />
+                            <label class="checkbox">
+                                <input type="checkbox" v-model="search.Owner" />
+                                <span></span>
+                                Omit Hire-In Machine
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer flex-center">
+                    <button type="button" class="btn btn-sm btn-primary" v-on:click="SearchFilter('StandardFilters')">Search</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="ChangeLogPopup" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-dialog-centered mw-800px">
+
+            <div class="modal-content" style="box-shadow:0px 0px 10px 0px">
+                <div class="modal-header" style="padding-top:8px;padding-bottom:8px">
+                    <!--begin::Modal title-->
+                    <h2 id="h2Heading"></h2>
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" v-on:click="CloseChangeLogPopup()" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <div class="modal-body p-2">
+                    <div id="changeloggrid">
+                    </div>
+                </div>
+                <!--end::Modal body-->
+                <!--begin::Modal footer-->
+                <div class="modal-footer flex-center">
+                    <button type="button" id="btnAddLog" v-on:click="AddChangeLog()" class="btn btn-primary">Add Log</button>
+                    <button type="button" id="btnExportLog" class="btn btn-primary btn-sm">Export Log</button>
+                </div>
+                <!--end::Modal footer-->
+                <!--end::Form-->
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="ModelAddChangeLog" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-dialog-centered mw-800px">
+
+            <div class="modal-content" style="box-shadow:0px 0px 10px 0px">
+                <div class="modal-header" style="padding-top:8px;padding-bottom:8px">
+                    <!--begin::Modal title-->
+                    <h2>Change Log</h2>
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" v-on:click="CloseChangeLogPopup()" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <div class="modal-body p-2">
+                    <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
+                        <!--begin::Col-->
+                        <div class="col">
+                            <label class="fs-6 fw-semibold form-label">
+                                <span class="required">PTO Number</span>
+                            </label>
+                            <div class="fv-row mb-7">
+
+                                <input type="text" class="form-control form-control-solid  validate[required]" readonly="readonly" name="FirstName" v-model="log.PTONumber" />
+                                <!--end::Input-->
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <div class="col">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7 fv-plugins-icon-container">
+                                <!--begin::Label-->
+                                <label class="fs-6 fw-semibold form-label">
+                                    <span class="required">Shift Date</span>
+                                </label>
+                                <!--end::Label-->
+                                <div class="w-100">
+                                    <input type="text" class="form-control form-control-solid validate[required]" readonly="readonly" id="txtShiftDate" v-model="log.LogShiftDate" />
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <div class="col">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7 fv-plugins-icon-container">
+                                <!--begin::Label-->
+                                <label class="fs-6 fw-semibold form-label">
+                                    <span class="required">Changed By</span>
+                                </label>
+                                <!--end::Label-->
+                                <div class="w-100">
+                                    <input type="text" class="form-control form-control-solid validate[required]" readonly="readonly" id="txtChangedBy" value="@fullName" />
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <div class="col">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7 fv-plugins-icon-container">
+                                <!--begin::Label-->
+                                <label class="fs-6 fw-semibold form-label">
+                                    <span class="required">Change Date</span>
+                                </label>
+                                <!--end::Label-->
+                                <div class="w-100">
+                                    <input type="text" class="form-control form-control-solid validate[required]" id="txtChangeDate" v-model="log.ChangeDate" />
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <div class="col">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7 fv-plugins-icon-container">
+                                <!--begin::Label-->
+                                <label class="fs-6 fw-semibold form-label">
+                                    <span class="required">Change Instigated By</span>
+                                </label>
+                                <!--end::Label-->
+                                <div class="w-100">
+                                    <select class="form-control form-control-solid  validate[required]" v-model="log.InstigatedBy">
+                                        <option value=""> -- select --</option>
+                                        @{
+                                            if (Model.StatusList?.Count > 0)
+                                            {
+                                                for (int i = 0; i < Model.StatusList.Count; i++)
+                                                {
+                                                    var r = Model.StatusList[i];
+                                                    if (r.LookupType == "Organisations")
+                                                    {
+                                                        <option value="@(r.Name)"> @(r.Name) </option>
+
+                                                    }
+
+                                                }
+                                            }
+                                        }
+                                        <
+                                    </select>
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <div class="col">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7 fv-plugins-icon-container">
+                                <!--begin::Label-->
+                                <label class="fs-6 fw-semibold form-label">
+                                    <span class="required">Instigated By (Contact Name)</span>
+                                </label>
+                                <!--end::Label-->
+                                <div class="w-100">
+                                    <input type="text" class="form-control form-control-solid validate[required]" name="LastName" v-model="log.ContactName" />
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <div class="col">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7 fv-plugins-icon-container">
+                                <!--begin::Label-->
+                                <label class="fs-6 fw-semibold form-label">
+                                    <span class="required">Change Occured Within Period</span>
+                                </label>
+                                <!--end::Label-->
+                                <div class="w-100">
+                                    <select class="form-control form-control-solid  validate[required]" v-model="log.ChangePeriod">
+                                        <option value=""> -- select --</option>
+                                        @{
+                                            if (Model.StatusList?.Count > 0)
+                                            {
+                                                for (int i = 0; i < Model.StatusList.Count; i++)
+                                                {
+                                                    var r = Model.StatusList[i];
+                                                    if (r.LookupType == "ChangePeriod")
+                                                    {
+                                                        <option value="@(r.Name)"> @(r.Name) </option>
+
+                                                    }
+
+                                                }
+                                            }
+                                        }
+
+                                    </select>
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <div class="col">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7 fv-plugins-icon-container">
+                                <!--begin::Label-->
+                                <label class="fs-6 fw-semibold form-label">
+                                    <span class="required">Change Type</span>
+                                </label>
+                                <!--end::Label-->
+                                <div class="w-100">
+                                    <select class="form-control form-control-solid  validate[required]" v-model="log.ChangeType">
+                                        <option value=""> -- select --</option>
+                                        @{
+                                            if (Model.StatusList?.Count > 0)
+                                            {
+                                                for (int i = 0; i < Model.StatusList.Count; i++)
+                                                {
+                                                    var r = Model.StatusList[i];
+                                                    if (r.LookupType == "ChangeType")
+                                                    {
+                                                        <option value="@(r.Name)"> @(r.Name) </option>
+
+                                                    }
+
+                                                }
+                                            }
+                                        }
+                                        <
+                                    </select>
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <div class="col">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7 fv-plugins-icon-container">
+                                <!--begin::Label-->
+                                <label class="fs-6 fw-semibold form-label">
+                                    <span class="required">Change Details</span>
+                                </label>
+                                <!--end::Label-->
+                                <div class="w-100">
+                                    <textarea row="4" class="form-control form-control-solid validate[required]" v-model="log.MoreInformation">
+                                    </textarea>
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <div class="col">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7 fv-plugins-icon-container">
+                                <!--begin::Label-->
+                                <label class="fs-6 fw-semibold form-label">
+                                    <span class="required">Further Action</span>
+                                </label>
+                                <!--end::Label-->
+                                <div class="w-100">
+                                    <select class="form-control form-control-solid  validate[required]" v-model="log.FurtherAction">
+                                        <option value=""> -- select --</option>
+                                        @{
+                                            if (Model.StatusList?.Count > 0)
+                                            {
+                                                for (int i = 0; i < Model.StatusList.Count; i++)
+                                                {
+                                                    var r = Model.StatusList[i];
+                                                    if (r.LookupType == "FurtherAction")
+                                                    {
+                                                        <option value="@(r.Name)"> @(r.Name) </option>
+
+                                                    }
+
+                                                }
+                                            }
+                                        }
+                                        <
+                                    </select>
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                        <!--end::Col-->
+                        <!--Machine code here -->
+                        <div class="col">
+                            <label class="fs-6 fw-semibold form-label">
+                                <span class="required">Machine Number</span>
+                            </label>
+                            <div class="fv-row mb-7">
+                                <input type="text" class="form-control form-control-solid  validate[required]" readonly="readonly" name="FirstName" v-model="log.MachineNum" />
+
+                            </div>
+                            <!--end::Input group-->
+                        </div>
+                    </div>
+                </div>
+                <!--end::Modal body-->
+                <!--begin::Modal footer-->
+                @if (RoleId != 11)
+                {
+                    <div class="modal-footer flex-center">
+                        <button type="button" v-on:click="SaveChangeLog($event)" class="btn btn-primary">Add Log</button>
+                    </div>
+                }
+
+                <!--end::Modal footer-->
+                <!--end::Form-->
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="WeeklyComments" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered mw-650px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" style="padding-top:8px;padding-bottom:8px">
+                    <!--begin::Modal title-->
+                    <h2>Comments</h2>
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <div class="modal-body py-10">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label>Engineering Support</label>
+                            <textarea class="form-control" style="height:100px" v-model="comment.EngineeringSupport" id="txtEngineeringSupport">
+
+                            </textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label>Courses And Others</label>
+                            <textarea class="form-control" style="height:100px" v-model="comment.CoursesAndOthers" id="txtCoursesAndOthers">
+
+                            </textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label>Maintenance Arrangements</label>
+                            <table class="table-bordered" id="commenttable">
+                                <thead>
+                                    <tr>
+                                        <td>
+                                            <label>Machine</label>
+                                            <input type="text" class="form-control" v-model="item.ColumnNo1" />
+                                        </td>
+                                        <td> <label>Sat</label><input type="text" class="form-control" v-model="item.ColumnNo2" /></td>
+                                        <td> <label>Sun</label><input type="text" class="form-control" v-model="item.ColumnNo3" /></td>
+                                        <td> <label>Mon</label><input type="text" class="form-control" v-model="item.ColumnNo4" /></td>
+                                        <td> <label>Tue</label><input type="text" class="form-control" v-model="item.ColumnNo5" /></td>
+                                        <td> <label>Wed</label><input type="text" class="form-control" v-model="item.ColumnNo6" /></td>
+                                        <td> <label>Thu</label><input type="text" class="form-control" v-model="item.ColumnNo7" /></td>
+                                        <td> <label>Fri</label><input type="text" class="form-control" v-model="item.ColumnNo8" /></td>
+                                        @if (RoleId != 11)
+                                        {
+                                            <td> <a class="btn btn-primary btnadd" v-on:click="AddItems(item)"><i class="fa fa-plus"></i></a></td>
+
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="col in comment.ListArrangements">
+                                        <td>{{col.ColumnNo1}}</td>
+                                        <td>{{col.ColumnNo2}}</td>
+                                        <td>{{col.ColumnNo3}}</td>
+                                        <td>{{col.ColumnNo4}}</td>
+                                        <td>{{col.ColumnNo5}}</td>
+                                        <td>{{col.ColumnNo6}}</td>
+                                        <td>{{col.ColumnNo7}}</td>
+                                        <td>{{col.ColumnNo8}}</td>
+                                        <td><a class="btn btn-warning btndel" v-on:click="DeleteItem(col)"><i class="fa fa-trash"></i></a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                @if (RoleId != 11)
+                {
+                    <div class="modal-footer flex-center">
+                        <button type="button" class="btn btn-sm btn-primary" v-on:click="SubmitComment($event)">Save Comment</button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="DistributionListPopup" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered mw-650px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" style="padding-top:8px;padding-bottom:8px">
+                    <!--begin::Modal title-->
+                    <h2>Email List</h2>
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <div class="modal-body py-10">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div id="gridDistributionList" style="height:300px;"></div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer flex-center">
+                    <button type="button" class="btn btn-sm btn-primary" v-on:click="SendEmail($event)">Send Email</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" id="btnoffcanvas" style="visibility:hidden;position:absolute" type="button" data-bs-toggle="offcanvas" data-bs-target="#demo">
+        Toggle
+    </button>
+
+    <div class="offcanvas offcanvas-bottom" data-bs-backdrop="static" id="demo">
+        <div class="offcanvas-header">
+            <h1 class="offcanvas-title col-md-6">
+
+                Allocations
+                <select style="border-radius:5px;border:1px solid lightgrey;width:150px" id="ddlMachineDepartment" @@change="GetRoster('')">
+                    <option></option>
+                    @{
+                        if (Model.StatusList?.Count > 0)
+                        {
+                            foreach (var temp in Model.StatusList)
+                            {
+                                if (temp.LookupType == "MachineDepartment")
+                                {
+                                    <option value="@temp.Name">@temp.Name</option>
+                                }
+
+                            }
+                        }
+                    }
+
+                </select>
+                <button type="button" v-on:click="WeeklyComemntsPopup()" class="btn btn-primary">Comments</button>
+                <button type="button" v-on:click="WeeklyRosterReport()" class="btn btn-primary">Weekly Roster Report</button>
+            </h1>
+
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body" style="margin-top:20px">
+            <div class="row">
+                <div class="col-md-12" style="text-align:center;font-size:20px">
+                    <span id="spanFromWeek"></span> <span id="spanToWeek"></span>
+                    <span id="dateFromWeek"></span><span id="dateToWeek"></span>
+                </div>
+            </div>
+            <div id="rosterGrid" style="height:250px"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="contactModel" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-dialog-centered mw-650px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <!--begin::Form-->
+                <form class="form" id="inputform">
+                    <!--begin::Modal header-->
+                    <div class="modal-header" id="kt_modal_add_customer_header">
+                        <!--begin::Modal title-->
+                        <h2 class="fw-bold">Add Contacts</h2>
+                        <!--end::Modal title-->
+                        <!--begin::Close-->
+                        <div id="kt_modal_add_customer_close" v-on:click="CloseContactPopup()" class="btn btn-icon btn-sm btn-active-icon-primary">
+                            <i class="ki-duotone ki-cross fs-1">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                            </i>
+                        </div>
+                        <!--end::Close-->
+                    </div>
+                    <!--end::Modal header-->
+                    <!--begin::Modal body-->
+                    <div class="modal-body py-10 px-lg-17">
+                        <!--begin::Scroll-->
+                        <div class="scroll-y me-n7 pe-7">
+                            <!--begin::Input group-->
+                            <div class="fv-row mb-7">
+                                <label class="required fs-6 fw-semibold mb-2">Name</label>
+                                <input type="text" class="form-control form-control-solid validate[required]" placeholder="" name="name" v-model="contact.Name" />
+                                <!--end::Input-->
+                            </div>
+                            <div class="fv-row mb-7">
+                                <label class=" fs-6 fw-semibold mb-2">Company</label>
+                                <input type="text" class="form-control form-control-solid" placeholder="" name="name" v-model="contact.Company" />
+                                <!--end::Input-->
+                            </div>
+
+                            <div class="fv-row mb-7">
+                                <label class=" fs-6 fw-semibold mb-2">Mobile Number</label>
+                                <input type="text" class="form-control form-control-solid" placeholder="" name="name" v-model="contact.MobileNumber" />
+                                <!--end::Input-->
+                            </div>
+
+                        </div>
+                        <!--end::Scroll-->
+                    </div>
+                    <!--end::Modal body-->
+                    <!--begin::Modal footer-->
+                    <div class="modal-footer flex-center">
+                        <!--begin::Button-->
+                        <button type="reset" id="kt_modal_add_customer_cancel" v-on:click="CloseContactPopup()" class="btn btn-light me-3">Discard</button>
+                        @if (RoleId != 11)
+                        {
+                            <button type="button" id="kt_modal_add_customer_submit" class="btn btn-primary">
+                                <span class="indicator-label" v-on:click="InsertContact($event)">Submit</span>
+                                <span class="indicator-progress">
+                                    Please wait...
+                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                </span>
+                            </button>
+                        }
+
+                    </div>
+                    <!--end::Modal footer-->
+                </form>
+                <!--end::Form-->
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts {
+
+    <script>
+        var TemplateData = [];
+        var LookupData = [];
+        var StadardFilterHistory = {};
+        var WeekList = [];
+        var MachineList = [];
+        var SecurityModel = {
+            IsInsert: '@IsInsert',
+            IsEdit: '@IsEdit',
+            IsRead: '@IsRead',
+            IsDelete: '@IsDelete',
+            RoleId: '@RoleId'
+        }
+        @foreach (var name in Model.TemplateList)
+        {
+            @:TemplateData.push({ TemplateName: '@name.TemplateName', Id: @name.Id, Columns: '@name.Columns' });
+        }
+        @foreach (var name in Model.StatusList)
+        {
+            @:LookupData.push({ LookupName: '@name.Name', Id: @name.Id, LookupType: '@name.LookupType' });
+        }
+        @foreach (var name in Model.WeekList)
+        {
+            @:WeekList.push({ Id: @name.Id, WeekTitle: '@name.Title', StartDate: '@name.StartDate', FinishDate: '@name.EndDate' });
+        }
+        @foreach (var name in Model.MachinesList)
+        {
+            @:MachineList.push({ Id: @name.Id, MachineNum: '@name.Number', MachineType: '@name.Type', HeadCode: '@name.HeadCode' });
+        }
+
+
+            StadardFilterHistory.OTM='@Model.FilterHistory?.Otm';
+        StadardFilterHistory.OTPM = '@Model.FilterHistory?.Otpm';
+        StadardFilterHistory.OTT = '@Model.FilterHistory?.Ott';
+        StadardFilterHistory.ACT = '@Model.FilterHistory?.Act';
+        StadardFilterHistory.ShiftBlank = '@Model.FilterHistory?.ShiftBlank';
+        StadardFilterHistory.ShiftCaped = '@Model.FilterHistory?.ShiftCaped';
+        StadardFilterHistory.ShiftCancelled = '@Model.FilterHistory?.ShiftCancelled';
+        StadardFilterHistory.Owner = '@Model.FilterHistory?.Owner';
+
+    </script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"></script>
+    <link href="~/appscripts/simplepagination.css" rel="stylesheet" />
+    <script src="~/appscripts/jquery.simplepagination.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.12.1/polyfill.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <link href="~/appscripts/uppy.min.css" rel="stylesheet" />
+
+    <link href="https://cdn.jsdelivr.net/npm/@@fullcalendar/core@4.4.2/main.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@@fullcalendar/timeline@4.4.2/main.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@@fullcalendar/resource-timeline@4.4.2/main.min.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/core@4.4.2/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/interaction@4.4.2/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/timeline@4.4.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/resource-common@4.4.2/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/resource-timeline@4.4.2/main.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="https://cdn3.devexpress.com/jslib/23.1.3/css/dx.light.css" />
+    <script src="https://cdn3.devexpress.com/jslib/23.1.3/js/dx.all.js"></script>
+
+
+    <script src="~/appscripts/uppy.min.js"></script>
+    <script src="~/appscripts/mainshift.js" type="text/javascript"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            $(".nav-item").removeClass("active");
+            $(".menu-item").removeClass("show");
+            $(".menu-item").removeClass("here");
+            $(".tab-pane").removeClass("active");
+            $(".tab-pane").removeClass("show");     
+        })
+    </script>
+
+}

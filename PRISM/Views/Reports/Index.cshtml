@@ -1,0 +1,317 @@
+﻿@using PRISM.DTO;
+@using PRISM.Models;
+@using Nancy.Json;
+@using PRISM.DTO.ReportsModels;
+
+@{
+    string type = Context.Request.Query["type"];
+    string WeekFrom = Context.Request.Query["FromWeek"];
+    string WeekTo = Context.Request.Query["ToWeek"];
+    string dep = Context.Request.Query["Dep"];
+    int FromWeek = 0;
+    int ToWeek = 0;
+    if (!string.IsNullOrEmpty(WeekFrom))
+        FromWeek = Convert.ToInt32(WeekFrom);
+    if (!string.IsNullOrEmpty(WeekTo))
+        ToWeek = Convert.ToInt32(WeekTo);
+
+    var serializer = new JavaScriptSerializer();
+    char[] alphbats = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
+}
+@model RootReportModel
+
+<style>
+    .symbol.symbol-40px .symbol-label {
+        width: 25px !important;
+        height: 25px !important;
+        font-size: 15px !important;
+        border-radius: 6px !important;
+    }
+
+
+
+
+    .tableformat3 tbody tr td {
+        padding-right: 5.03pt;
+        padding-left: 5.03pt;
+        vertical-align: top;
+    }
+
+        .tableformat tbody tr td p, .tableformat2 tbody tr td p, .tableformat3 tbody tr td p {
+            margin-top: 4px !important;
+            margin-bottom: 4px !important;
+        }
+
+    .btnprint {
+        float: right;
+    }
+</style>
+<div id="apporg" class="d-flex flex-column-fluid align-items-start @(type != "VSTP"?"container-fluid":"container")">
+    <div class="content flex-row-fluid" id="kt_content">
+
+        <div class="card">
+            <div class="card-header border-0">
+
+                <div class="row pt-5" id="filterarea" style="width: 100%;">
+                    @{
+                        if (type != "VSTP")
+                        {
+                            <div class="col-sm-2">
+                                <label>
+                                    Show me Shifts for Week
+                                </label>
+                                <select class="form-select form-select-solid" id="ddlFromWeek" @@change="SearchFilter('FromWeek')">
+                                    <option></option>
+                                    @{
+                                        if (Model.WeekList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.WeekList)
+                                            {
+                                                if (FromWeek == temp.Id)
+                                                {
+                                                    <option value="@temp.Id" selected="selected">@temp.Title</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@temp.Id">@temp.Title</option>
+                                                }
+
+
+                                            }
+                                        }
+                                    }
+
+                                </select>
+                            </div>
+                        }
+                    }
+
+
+                    @{
+                        if (type == "BOXREPORT" || type == "PLANTCREWROSTERREPORT" || type == "VSTP")
+                        {
+                            if (type == "BOXREPORT")
+                            {
+                                <div class="col-sm-2">
+                                    <label>
+                                        Machine Departments
+                                    </label>
+                                    <select class="form-select form-select-solid" id="ddlMachineDepartments">
+                                        <option></option>
+                                        @{
+                                            if (Model.LookupList?.Count > 0)
+                                            {
+                                                foreach (var temp in Model.LookupList)
+                                                {
+                                                    if (temp.Name == dep)
+                                                    {
+                                                        <option value="@temp.Name" selected="selected">@temp.Name</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@temp.Name">@temp.Name</option>
+                                                    }
+                                                    
+                                                }
+                                            }
+                                        }
+
+                                    </select>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="col-sm-2">
+                                <label>
+                                    To
+                                </label>
+                                <select class="form-select form-select-solid" id="ddlToWeek" @@change="SearchFilter('ToWeek')">
+                                    <option></option>
+                                    @{
+                                        if (Model.WeekList?.Count > 0)
+                                        {
+                                            foreach (var temp in Model.WeekList)
+                                            {
+                                                if (ToWeek == temp.Id)
+                                                {
+                                                    <option value="@temp.Id" selected="selected">@temp.Title</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@temp.Id">@temp.Title</option>
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                        }
+                    }
+
+
+                    @{
+                        if (type != "VSTP")
+                        {
+                            <div class="col-sm-8 pt-5">
+
+                                <button class="btn btn-primary btn-sm" v-on:click="SearchReport('@type',$event)">Search</button>
+
+                                @{
+                                    if (type == "PLANTCREWROSTERREPORT")
+                                    {
+                                        <button class="btn btn-primary btn-sm btnprint" style="float:right;margin-left:10px" v-on:click="ExportWeeklyRoster($event)">Export</button>
+                                        <button class="btn btn-primary btn-sm btnprint" style="float:right;margin-left:10px" v-on:click="GetDistributionList('@type',$event)">Email</button>
+
+                                    }
+                                }
+                                <button class="btn btn-primary btn-sm btnprint" style="float:right" v-on:click="GenerateReport('@type',$event)">Print</button>
+
+
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-sm-12 pt-5">
+
+                                <button class="btn btn-primary btn-sm btnprint" style="float:right" v-on:click="GenerateReport('@type',$event)">Print</button>
+                            </div>
+                        }
+                    }
+                </div>
+
+
+
+            </div>
+            <div class="card-body" id="pdfcontent" style="padding-top:2px;font-family: Arial;font-style: normal;font-weight: normal; font-size: 7pt;">
+                @{
+                    if (type == "VSTP")
+                    {
+                        @await Html.PartialAsync("~/Views/Reports/_PartialVSTP.cshtml", Model.vSTPViewModel)
+                    }
+                    if (type == "BOXREPORT")
+                    {
+                        @await Html.PartialAsync("~/Views/Reports/_boxReport.cshtml", Model)
+                    }
+                    if (type == "CONDUCTORREPORT")
+                    {
+                        @await Html.PartialAsync("~/Views/Reports/_conductorsChronReport.cshtml", Model)
+                    }
+                    if (type == "INTERNALCOMMENTREPORT")
+                    {
+                        @await Html.PartialAsync("~/Views/Reports/_internalCommentReport.cshtml", Model)
+                    }
+                    if (type == "PLANTCREWROSTERREPORT")
+                    {
+                        @await Html.PartialAsync("~/Views/Reports/_plantCrewRosterReport.cshtml", Model)
+                    }
+                    if (type == "PLANTCHANGELOGREPORT")
+                    {
+                        @await Html.PartialAsync("~/Views/Reports/_plantchangeLogReport.cshtml", Model)
+                    }
+                }
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="DistributionListPopup" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered mw-650px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" style="padding-top:8px;padding-bottom:8px">
+                    <!--begin::Modal title-->
+                    <h2>Distribution List</h2>
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <i class="ki-duotone ki-cross fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <div class="modal-body py-10">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div id="gridDistributionList" style="height:300px;"></div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer flex-center">
+                    <button type="button" class="btn btn-sm btn-primary" v-on:click="SendEmail('@type',$event)">Send Email</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+        @section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.5/jspdf.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn3.devexpress.com/jslib/23.1.3/css/dx.light.css" />
+    <script src="https://cdn3.devexpress.com/jslib/23.1.3/js/dx.all.js"></script>
+    <script src="~/appscripts/reports.js"></script>
+    <script>
+        $(function () {
+            $(".nav-item").removeClass("active");
+            $("#liReports").addClass("active");
+            $(".menu-item").removeClass("show");
+            $(".menu-item").removeClass("here");
+            $("#menu" + '@type.ToString()').addClass("here");
+            $("#menu" + '@type.ToString()').addClass("show");
+            $(".tab-pane").removeClass("active");
+            $("#tabReports").addClass("active");
+            $(".tab-pane").removeClass("show");
+            $("#tabReports").addClass("show");
+        })
+        function GeneratePDF() {
+
+            var pdf = new jsPDF('p', 'pt', 'letter')
+
+                // source can be HTML-formatted string, or a reference
+                // to an actual DOM element from which the text will be scraped.
+                , source = $('#pdfcontent')[0]
+
+                // we support special element handlers. Register them with jQuery-style
+                // ID selector for either ID or node name. ("#iAmID", "div", "span" etc.)
+                // There is no support for any other type of selectors
+                // (class, of compound) at this time.
+                , specialElementHandlers = {
+                    // element with id of "bypass" - jQuery style selector
+                    '#bypassme': function (element, renderer) {
+                        // true = "handled elsewhere, bypass text extraction"
+                        return true
+                    }
+                }
+
+            margins = {
+                top: 80,
+                bottom: 60,
+                left: 40,
+                width: 522
+            };
+            // all coords and widths are in jsPDF instance's declared units
+            // 'inches' in this case
+            pdf.fromHTML(
+                source // HTML string or DOM elem ref.
+                , margins.left // x coord
+                , margins.top // y coord
+                , {
+                    'width': margins.width // max width of content on PDF
+                    , 'elementHandlers': specialElementHandlers
+                },
+                function (dispose) {
+                    // dispose: object with X, Y of the last line add to the PDF
+                    //          this allow the insertion of new lines after html
+                    pdf.save('Test.pdf');
+                },
+                margins
+            )
+        }
+    </script>
+        }

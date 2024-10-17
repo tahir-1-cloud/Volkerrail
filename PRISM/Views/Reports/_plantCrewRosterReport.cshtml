@@ -1,0 +1,285 @@
+﻿@using PRISM.DTO;
+@using PRISM.Models;
+@using Nancy.Json;
+@using PRISM.DTO.ReportsModels;
+@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO.Employeedto
+@using System.Security.Claims
+
+@model RootReportModel
+
+
+
+@{
+    bool IsRead = false;
+}
+@if (User.Identity.IsAuthenticated)
+{
+    var identity = User.Identity as ClaimsIdentity;
+
+    try
+    {
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            var currentObj = roleObject.Where(x => x.ModuleId == 24).FirstOrDefault();
+            if (currentObj != null)
+            {
+                IsRead = currentObj.ActionRoles.IsRead ?? false;
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+
+
+}
+
+@{
+    if (IsRead && Model.weeklyRosterModel?.Count > 0)
+    {
+
+
+        <table style="border-collapse:collapse;margin-left:5.1pt;width:100%" cellspacing="0">
+            <tr style="height:13pt">
+                <td style="width:150px">
+                    <img alt="Logo" src="https://devprism.azurewebsites.net/assets/media/logos/pdfreportlogo.PNG" style="width:150px" />
+                </td>
+                <td style="text-align:center">
+                    <h4 style="text-decoration:underline;color:darkblue;margin-bottom:1px;font-family: Helvetica;">VolkerRail Plant Crew Weekly Roster</h4>
+                    <p style="color:darkblue;margin-bottom:1px;font-family: Helvetica;">Week Commencing Saturday @(Model.WeekList.Where(x => x.WeekNo.ToString() == Model.weeklyRosterModel?[0].WeekNo).FirstOrDefault()?.StartDate?.ToString("dd-MM-yyyy"))</p>
+                    <p style="font-family:Helvetica;"> VRCC: 01302 791187 : Emergency:  0845 6003989 </p>
+
+                </td>
+                <td style="width:150px">
+                    <h4 style="text-decoration:underline;color:darkblue;font-family: Helvetica;">WEEK</h4> @(string.IsNullOrEmpty(Model.weeklyRosterModel?[0].WeekNo) ? "" : Model.weeklyRosterModel?[0].WeekNo.Substring(1))
+                </td>
+            </tr>
+        </table>
+
+        <br />
+
+
+        <table style="border-collapse:collapse;margin-left:5.1pt;width:100%;font-family: Helvetica;" cellspacing="0">
+            <tr style="height:13pt">
+                <td style="width:5pt; max-width:5pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style="text-indent: 0pt; text-align: left; color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt;margin-bottom:0px;margin-top:0px"><br /></p>
+                </td>
+                <td style="width:27pt; max-width:27pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style="text-indent: 0pt; text-align: left; color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt;margin-bottom:0px;margin-top:0px">M/<span class="s2"> </span>C</p>
+                </td>
+                <td style="width:27pt; max-width:27pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Arial; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt;  text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">Day</p>
+                </td>
+                <td style="width:37pt; max-width:37pt !important;border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">StartTime</p>
+                </td>
+                <td style="width:43pt; max-width:43pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">FinishTime</p>
+                </td>
+                <td style="width:120pt; max-width:120pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">Location</p>
+                </td>
+                <td style="width:51pt; max-width:51pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt;text-align: left;margin-bottom:0px;margin-top:0px">Sts</p>
+                </td>
+                <td style="width:72pt; max-width:72pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt;  text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">REM</p>
+                </td>
+                <td style="width:52pt; max-width:52pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">Path</p>
+                </td>
+                <td style="width:72pt; max-width:72pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">From</p>
+                </td>
+                <td style="width:72pt; max-width:72pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">To</p>
+                </td>
+                <td style="width:72pt; max-width:72pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">Crew<span class="s2"> </span>Manage<span style="color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt;font-family: Helvetica">r</span></p>
+                </td>
+                <td style="width:120pt; max-width:120pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">Operators</p>
+                </td>
+                <td style="width:62pt; max-width:62pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">Conducto<span style="color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt;">r</span></p>
+                </td>
+                <td style="width:30pt; max-width:30pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style=" color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: underline; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">DRA</p>
+                </td>
+                <td style="width:6pt; max-width:6pt !important; border-bottom-style:solid;border-bottom-width:1pt">
+                    <p style="text-indent: 0pt;text-align: left;margin-bottom:0px;margin-top:0px"><br /></p>
+                </td>
+            </tr>
+            @{
+                if (Model.weeklyRosterModel?.Count > 0)
+                {
+                    foreach (var item in Model.weeklyRosterModel)
+                    {
+                        <tr style="height:17pt">
+                            <td style="border-top-style:solid;border-top-width:1pt;margin-bottom:0px;margin-top:0px">
+                                <p style="text-indent: 0pt;text-align: left;margin-bottom:0px;margin-top:0px"><br /></p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.MachineNum</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.PpreDay</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.StartTime</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.FinishTime</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color:@item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.WorksiteDetails</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.STS</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.STSREM</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.PathTime</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.YardOut</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.YardIn</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px"> @item.PpreOperator.Replace(",", ", ")</p>
+                            </td>
+
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.PpreDriver.Replace(",", ", ")</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.Contractor</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;border-bottom-style:solid;border-bottom-width:1pt">
+                                <p style="color: @item.Color;  font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; text-indent: 0pt; text-align: left;margin-bottom:0px;margin-top:0px">@item.PpreDra</p>
+                            </td>
+                            <td style="border-top-style:solid;border-top-width:1pt;margin-bottom:0px;margin-top:0px">
+                                <p style="text-indent: 0pt;text-align: left;margin-bottom:0px;margin-top:0px"><br /></p>
+                            </td>
+                        </tr>
+                    }
+                }
+
+            }
+
+        </table>
+
+
+
+        <br />
+        <br />
+        <p style="color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 9pt; margin: 0pt; padding-top: 5pt; text-indent: 0pt; text-align: left;font-family: Helvetica;">
+            Engineering Support
+        </p>
+        <p style="color: black;white-space: pre-line; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; margin: 0pt; padding-top: 5pt; text-indent: 0pt; text-align: left;">
+            @Model.weeklyComment?.EngineeringSupport
+        </p>
+        <br />
+        <br />
+        <p style="color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 9pt; margin: 0pt; padding-top: 5pt; text-indent: 0pt; text-align: left;">
+            Courses And Others
+        </p>
+        <p style="color: black;white-space: pre-line; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 7pt; margin: 0pt; padding-top: 5pt; text-indent: 0pt; text-align: left;">
+            @Model.weeklyComment?.CoursesAndOthers
+
+        </p>
+
+        <br />
+        <p style="color: black; font-family: Helvetica; font-style: normal; font-weight: normal; text-decoration: none; font-size: 9pt; margin: 0pt; padding-top: 5pt; text-indent: 0pt; text-align: left;">
+            Maintenance Arrangements
+        </p>
+
+        <br />
+
+        <div>
+            <table style="border-collapse:collapse;margin-left:5.1pt;width:100%;font-family: Helvetica" cellspacing="0">
+
+                <tr style="background-color:dodgerblue;">
+                    <th style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                        Machine
+                    </th>
+                    <th style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                        Sat
+                    </th>
+                    <th style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                        Sun
+                    </th>
+                    <th style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                        Mon
+                    </th>
+                    <th style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                        Tue
+                    </th>
+                    <th style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                        Wed
+                    </th>
+                    <th style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                        Thu
+                    </th>
+                    <th style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                        Fri
+                    </th>
+
+                </tr>
+
+
+                @{
+                    if (Model.weekArrangements?.Count > 0)
+                    {
+                        foreach (var item in Model.weekArrangements)
+                        {
+
+
+                            <tr style="font-family: Helvetica">
+                                <td style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                                    @item.ColumnNo1
+                                </td>
+                                <td style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                                    @item.ColumnNo2
+                                </td>
+                                <td style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                                    @item.ColumnNo3
+                                </td>
+                                <td style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                                    @item.ColumnNo4
+                                </td>
+                                <td style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                                    @item.ColumnNo5
+                                </td>
+                                <td style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                                    @item.ColumnNo6
+                                </td>
+                                <td style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                                    @item.ColumnNo7
+                                </td>
+                                <td style="width:5pt;border-style:solid;border-width:1pt;font-size: 7pt;font-family: Helvetica;">
+                                    @item.ColumnNo8
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                }
+            </table>
+        </div>
+
+
+    }
+}
+
+
+
+

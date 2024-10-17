@@ -1,0 +1,460 @@
+﻿@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO;
+@using PRISM.DTO.Employeedto
+@using PRISM.Models;
+@using Nancy.Json;
+@{
+    int RoleId = 0;
+}
+@if (User.Identity.IsAuthenticated)
+{
+
+    try
+    {
+
+
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            RoleId = roleObject[0].RoleId;
+        }
+        if (RoleId == 4)
+        {
+            RoleId = 0;
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+
+
+}
+<style>
+    .header {
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        background-color: #009ED6;
+    }
+
+    body {
+        background-color: #dfe2e5;
+    }
+
+    a {
+        cursor: pointer !important
+    }
+</style>
+
+<div id="kt_header" class="header">
+    <!--begin::Header top-->
+    <div class="header-top d-flex align-items-stretch flex-grow-1">
+        <!--begin::Container-->
+        <div class="d-flex container-fluid align-items-stretch">
+            <!--begin::Brand-->
+            <div class="d-flex align-items-center align-items-lg-stretch me-5 flex-row-fluid">
+                <!--begin::Heaeder navs toggle-->
+                <button class="d-lg-none btn btn-icon btn-color-white bg-hover-white bg-hover-opacity-10 w-35px h-35px h-md-40px w-md-40px ms-n3 me-2" id="kt_header_navs_toggle">
+                    <i class="ki-duotone ki-abstract-14 fs-2">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                    </i>
+                </button>
+                <!--end::Heaeder navs toggle-->
+                <!--begin::Logo-->
+                <a href="@Url.Action("Index", "Home")" class="d-flex align-items-center">
+                    <img alt="Logo" src="~/assets/media/logos/Logo-VolkerRail-CB.png" class="h-25px h-lg-20px" />
+                </a>
+                <!--end::Logo-->
+                <!--begin::Tabs wrapper-->
+                <div class="align-self-end overflow-auto" id="kt_brand_tabs">
+                    <!--begin::Header tabs wrapper-->
+                    <div class="header-tabs overflow-auto mx-4 ms-lg-10 mb-5 mb-lg-0" id="kt_header_tabs" data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_header_navs_wrapper', lg: '#kt_brand_tabs'}">
+                        <!--begin::Header tabs-->
+                        @{
+                            if (RoleId != 0)
+                            {
+                                <ul class="nav flex-nowrap text-nowrap">
+                                    <li class="nav-item" id="liEmployees">
+                                        <a class="nav-link" data-bs-toggle="tab" onclick="TabActive('tabEmployees')" href="#tabEmployees">Employees</a>
+                                    </li>
+                                    <li class="nav-item" id="liMachines">
+                                        <a class="nav-link" data-bs-toggle="tab" onclick="TabActive('tabMachines')" href="#tabMachines">Machines</a>
+                                    </li>
+                                    <li class="nav-item" id="liRoutes">
+                                        <a class="nav-link" data-bs-toggle="tab" onclick="TabActive('tabRoutes')" href="#tabRoutes">Locations</a>
+                                    </li>
+                                    <li class="nav-item" id="liLookups">
+                                        <a class="nav-link" data-bs-toggle="tab" onclick="TabActive('tabLookups')" href="#tabLookups">Lookups</a>
+                                    </li>
+                                    <li class="nav-item" id="liChangeLogLookups">
+                                        <a class="nav-link" data-bs-toggle="tab" onclick="TabActive('tabChangeLogLookups')" href="#tabChangeLogLookups">Change Log Lookups</a>
+                                    </li>
+                                    @if (RoleId == 1)
+                                    {
+                                        <li class="nav-item" id="liUserManagement">
+                                            <a class="nav-link" data-bs-toggle="tab" onclick="TabActive('tabUserManagement')" href="#tabLookups">User Management</a>
+                                        </li>
+                                    }                              
+                                    <li class="nav-item" id="liReports">
+                                        <a class="nav-link" data-bs-toggle="tab" onclick="TabActive('tabReports')" href="#tabReports">Reports</a>
+                                    </li>
+                                    <li class="nav-item" id="liImports">
+                                        <a class="nav-link" data-bs-toggle="tab" onclick="TabActive('tabImports')" href="#tabImports">Imports</a>
+                                    </li>
+                                </ul>
+                            }
+                        }
+
+                        <!--begin::Header tabs-->
+                    </div>
+                    <!--end::Header tabs wrapper-->
+                </div>
+                <!--end::Tabs wrapper-->
+            </div>
+
+        </div>
+        <!--end::Container-->
+    </div>
+    <!--end::Header top-->
+    <!--begin::Header navs-->
+    <div class="header-navs d-flex align-items-stretch flex-stack h-lg-70px w-100 py-5 py-lg-0 overflow-hidden overflow-lg-visible" id="kt_header_navs" data-kt-drawer="true" data-kt-drawer-name="header-menu" data-kt-drawer-activate="{default: true, lg: false}" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'200px', '300px': '250px'}" data-kt-drawer-direction="start" data-kt-drawer-toggle="#kt_header_navs_toggle" data-kt-swapper="true" data-kt-swapper-mode="append" data-kt-swapper-parent="{default: '#kt_body', lg: '#kt_header'}">
+        <!--begin::Container-->
+        <div class="d-lg-flex container-fluid w-100">
+            <!--begin::Wrapper-->
+            <div class="d-lg-flex flex-column justify-content-lg-center w-100" id="kt_header_navs_wrapper">
+                <!--begin::Header tab content-->
+                <div class="tab-content" data-kt-scroll="true" data-kt-scroll-activate="{default: true, lg: false}" data-kt-scroll-height="auto" data-kt-scroll-offset="70px">
+                    <!--begin::Tab panel-->
+                    @{
+                        if (RoleId != 0)
+                        {
+                            <div class="tab-pane fade" id="tabEmployees">
+                                <!--begin::Menu wrapper-->
+                                <div class="header-menu flex-column align-items-stretch flex-lg-row">
+                                    <!--begin::Menu-->
+                                    <div class="menu menu-rounded menu-column menu-lg-row menu-root-here-bg-desktop menu-active-bg menu-title-gray-700 menu-state-primary menu-arrow-gray-400 fw-semibold align-items-stretch flex-grow-1 px-2 px-lg-0" id="#kt_header_menu" data-kt-menu="true">
+
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="menuAbsances">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Abs")" class="menu-title">Absences</a>
+                                            </span>
+                                        </div>
+                                        <!--end:Menu item-->
+                                        <!--begin:Menu item-->
+                                        <div class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2" id="menuRoster">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Roster")" class="menu-title">Weekly Roster</a>
+                                            </span>
+                                        </div>
+                                        <!--end:Menu item-->
+                                        <!--begin:Menu item-->
+                                        <div class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2" id="menuEmployeeManagement">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Employees")" class="menu-title">Employee Management</a>
+                                            </span>
+                                        </div>
+                                        <!--end:Menu item-->
+                                    </div>
+                                    <!--end::Menu-->
+                                </div>
+                                <!--end::Menu wrapper-->
+                            </div>
+                            <!--end::Tab panel-->
+                            <!--begin::Tab panel-->
+                            <div class="tab-pane fade" id="tabMachines">
+                                <div class="header-menu flex-column align-items-stretch flex-lg-row">
+                                    <div class="menu menu-rounded menu-column menu-lg-row menu-root-here-bg-desktop menu-active-bg menu-title-gray-700 menu-state-primary menu-arrow-gray-400 fw-semibold align-items-stretch flex-grow-1 px-2 px-lg-0" id="#kt_header_menu" data-kt-menu="true">
+                                        <!--begin:Menu item-->
+                                        <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2" id="menuMachines">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Machines")" class="menu-title">
+                                                    Edit Machines
+                                                </a>
+                                            </span>
+                                        </div>
+                                        <!--end:Menu item-->
+                                        <!--begin:Menu item-->
+                                        @*      <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="menu14ConsecShift">
+                                <!--begin:Menu link-->
+                                <span class="menu-link py-3">
+                                <a href="#" class="menu-title">Create 14 Consec Shift</a>
+                                </span>
+                                </div>*@
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--end::Tab panel-->
+                            <!--begin::Tab panel-->
+                            <div class="tab-pane fade" id="tabRoutes">
+                                <div class="header-menu flex-column align-items-stretch flex-lg-row">
+
+                                    <div class="menu menu-rounded menu-column menu-lg-row menu-root-here-bg-desktop menu-active-bg menu-title-gray-700 menu-state-primary menu-arrow-gray-400 fw-semibold align-items-stretch flex-grow-1 px-2 px-lg-0" id="#kt_header_menu" data-kt-menu="true">
+                                        <!--begin:Menu item-->
+
+
+                                        <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2" id="menuRoutes">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Routes")" class="menu-title">
+                                                    Location Management
+                                                </a>
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Tab panel-->
+                            <!--begin::Tab panel-->
+                            <div class="tab-pane fade" id="tabLookups">
+                                <div class="header-menu flex-column align-items-stretch flex-lg-row">
+                                    <div class="menu menu-rounded menu-column menu-lg-row menu-root-here-bg-desktop menu-active-bg menu-title-gray-700 menu-state-primary menu-arrow-gray-400 fw-semibold align-items-stretch flex-grow-1 px-2 px-lg-0" id="#kt_header_menu" data-kt-menu="true">
+                                        <!--begin:Menu item-->
+                                        <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2" id="menuContacts">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Contacts")" class="menu-title">
+                                                    Contacts
+                                                </a>
+                                            </span>
+                                        </div>
+
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="menuDistributions">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Distributions")" class="menu-title">Distribution List</a>
+                                            </span>
+                                        </div>
+                                        @*  <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupCategories">
+                                <!--begin:Menu link-->
+                                <span class="menu-link py-3">
+                                <a href="@Url.Action("Index", "Lookups", new { type = "Categories" })" class="menu-title">Machine Categories</a>
+                                </span>
+                                </div> *@
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupStatuses">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "Statuses" })" class="menu-title">Machine Statuses</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupDistribution">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "Distribution" })" class="menu-title">Distribution Types</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupEmployee">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "Employee" })" class="menu-title">Employee Types</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="menuLeaveTypes">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("LeaveTypes", "Lookups")" class="menu-title">Leave Types</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="menuWeeks">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Weeks", "Lookups")" class="menu-title">Weeks</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="menuTemplateSetting">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("TemplateSetting", "Lookups")" class="menu-title">Template Setting</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupVSTPContact">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "VSTPContact" })" class="menu-title">VSTP Contact</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupShiftStatus">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "ShiftStatus" })" class="menu-title">Shift Status</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupACT">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "ACT" })" class="menu-title">ACT</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupMachineOwner">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "MachineOwner" })" class="menu-title">Machine Owner</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupMachineDepartment">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "MachineDepartment" })" class="menu-title">Machine Department</a>
+                                            </span>
+                                        </div>
+                                        @*  <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="menuNRShift">
+                                <!--begin:Menu link-->
+                                <span class="menu-link py-3">
+                                <a  class="menu-title">Enter NR Shift ID</a>
+                                </span>
+                                </div>*@
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane fade" id="tabChangeLogLookups">
+                                <div class="header-menu flex-column align-items-stretch flex-lg-row">
+                                    <div class="menu menu-rounded menu-column menu-lg-row menu-root-here-bg-desktop menu-active-bg menu-title-gray-700 menu-state-primary menu-arrow-gray-400 fw-semibold align-items-stretch flex-grow-1 px-2 px-lg-0" id="#kt_header_menu" data-kt-menu="true">
+
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupOrganisations">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "Organisations" })" class="menu-title">Organisations</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupChangePeriod">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "ChangePeriod" })" class="menu-title">Change Period</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupChangeType">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "ChangeType" })" class="menu-title">Change Type</a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="lookupFurtherAction">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Lookups", new { type = "FurtherAction" })" class="menu-title">Further Action</a>
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Tab panel-->
+                            <!--begin::Tab panel-->
+                            @if (RoleId == 1)
+                            {
+                                <div class="tab-pane fade" id="tabUserManagement">
+                                    <div class="header-menu flex-column align-items-stretch flex-lg-row">
+                                        <div class="menu menu-rounded menu-column menu-lg-row menu-root-here-bg-desktop menu-active-bg menu-title-gray-700 menu-state-primary menu-arrow-gray-400 fw-semibold align-items-stretch flex-grow-1 px-2 px-lg-0" id="#kt_header_menu" data-kt-menu="true">
+                                            <!--begin:Menu item-->
+                                            <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2" id="menuUserManagement">
+                                                <!--begin:Menu link-->
+                                                <span class="menu-link py-3">
+                                                    <a href="@Url.Action("Index", "AppUsers")" class="menu-title">
+                                                        Users
+                                                    </a>
+                                                </span>
+                                            </div>
+
+                                            <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="menuRoles">
+                                                <!--begin:Menu link-->
+                                                <span class="menu-link py-3">
+                                                    <a href="@Url.Action("Roles", "AppUsers")" class="menu-title">Roles</a>
+                                                </span>
+                                            </div>
+                                            <div class="menu-item menu-lg-down-accordion me-0 me-lg-2" id="menuUserLog">
+                                                <!--begin:Menu link-->
+                                                <span class="menu-link py-3">
+                                                    <a href="@Url.Action("UserLog", "AppUsers")" class="menu-title">User Log</a>
+                                                </span>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        
+                        <div class="tab-pane fade" id="tabReports">
+                                <div class="header-menu flex-column align-items-stretch flex-lg-row">
+                                    <div class="menu menu-rounded menu-column menu-lg-row menu-root-here-bg-desktop menu-active-bg menu-title-gray-700 menu-state-primary menu-arrow-gray-400 fw-semibold align-items-stretch flex-grow-1 px-2 px-lg-0" id="#kt_header_menu" data-kt-menu="true">
+                                        <!--begin:Menu item-->
+                                        <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2" id="menuPLANTCREWROSTERREPORT">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Reports", new { type = "PLANTCREWROSTERREPORT",ShiftId=0,FromWeek="",ToWeek="" })" class="menu-title">
+                                                    Weekly Roster Report
+                                                </a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2" id="menuCONDUCTORREPORT">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Reports", new { type = "CONDUCTORREPORT",ShiftId=0,FromWeek="",ToWeek="" })" class="menu-title">
+                                                    Conductor Report
+                                                </a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2" id="menuINTERNALCOMMENTREPORT">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Reports", new { type = "INTERNALCOMMENTREPORT",ShiftId=0,FromWeek="",ToWeek="" })" class="menu-title">
+                                                    Internal Comments Report
+                                                </a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2" id="menuBOXREPORT">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Reports", new { type = "BOXREPORT",ShiftId=0,FromWeek="",ToWeek="" })" class="menu-title">
+                                                    Box Report
+                                                </a>
+                                            </span>
+                                        </div>
+                                        <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2" id="menuCHANGELOG">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("ChangeLog", "Reports")" class="menu-title">
+                                                    Change Log
+                                                </a>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="tabImports">
+                                <div class="header-menu flex-column align-items-stretch flex-lg-row">
+                                    <div class="menu menu-rounded menu-column menu-lg-row menu-root-here-bg-desktop menu-active-bg menu-title-gray-700 menu-state-primary menu-arrow-gray-400 fw-semibold align-items-stretch flex-grow-1 px-2 px-lg-0" id="#kt_header_menu" data-kt-menu="true">
+                                        <!--begin:Menu item-->
+                                        <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2" id="menuShiftsLNE">
+                                            <!--begin:Menu link-->
+                                            <span class="menu-link py-3">
+                                                <a href="@Url.Action("Index", "Home", new { type = "ByMenu" })" onclick="RedirectoHomePage()" class="menu-title">
+                                                    Shifts
+                                                </a>
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    <!--end::Tab panel-->
+                </div>
+                <!--end::Header tab content-->
+            </div>
+            <!--end::Wrapper-->
+        </div>
+        <!--end::Container-->
+    </div>
+    <!--end::Header navs-->
+</div>

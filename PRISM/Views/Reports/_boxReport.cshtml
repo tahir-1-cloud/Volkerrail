@@ -1,0 +1,248 @@
+﻿@using PRISM.DTO;
+@using PRISM.Models;
+@using Nancy.Json;
+@using PRISM.DTO.ReportsModels;
+
+@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO.Employeedto
+@using System.Security.Claims
+
+@model RootReportModel
+
+@{
+    bool IsRead = false;
+    string WeekNumber = "";
+    string fullWeekNumber = "";
+    if (Model.boxReportModel?.Count > 0)
+    {
+        if (Model.boxReportModel[0].boxReportModel?.Count > 0)
+        {
+            if (Model.boxReportModel[0].boxReportModel[0].boxReportModels?.Count > 0)
+            {
+                WeekNumber = Model.boxReportModel[0].boxReportModel[0].boxReportModels.Where(x => x.WeekNo != "0").Select(x => x.WeekNo).FirstOrDefault();
+                if (!string.IsNullOrEmpty(WeekNumber))
+                {
+                    WeekNumber = WeekNumber.Substring(1);
+                }
+                fullWeekNumber = Model.boxReportModel[0].boxReportModel[0].boxReportModels.Where(x => x.WeekNo != "0").Select(x => x.WeekNo).FirstOrDefault();
+            }
+        }
+    }
+
+}
+@if (User.Identity.IsAuthenticated)
+{
+    var identity = User.Identity as ClaimsIdentity;
+
+    try
+    {
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            var currentObj = roleObject.Where(x => x.ModuleId == 27).FirstOrDefault();
+            if (currentObj != null)
+            {
+                IsRead = currentObj.ActionRoles.IsRead ?? false;
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+    
+
+}
+
+
+@{
+    string imageUrl = Url.Content("~/assets/caped.png");
+
+    if (IsRead)
+    {
+
+        if (Model.boxReportModel?.Count > 0)
+        {
+            <input type="hidden" id="hdWeekNumber" value="@(WeekNumber)" />
+            <input type="hidden" id="hdWeekDateTime" value="@(Model.WeekList.Where(x => x.WeekNo.ToString() == fullWeekNumber).FirstOrDefault()?.StartDate?.ToString("dd-MM-yyyy"))" />
+            <table class="tableformat3" cellspacing="0" cellpadding="0" style="border: 0pt solid rgb(0, 0, 0); border-collapse: collapse;width:100%">
+                <tr style='font-family:Helvetica'>
+                    <td>
+                        <p style="font-size:14px;text-align:center">
+                            <span style="font-family:Helvetica"><b>WEEK NO:  @(WeekNumber) </b></span>
+                        </p>
+                    <td>
+                    <td>
+                        <p style="font-size:14px;text-align:center">
+                            <span style="font-family:Helvetica"><b>  @(DateTime.Now.ToString("dd-MM-yyyy")) </b></span>
+                        </p>
+                    </td>
+
+                    <td style="text-align:center">
+                        <h4 style="color:darkblue;margin-bottom:1px"> Commencing Saturday @(Model.WeekList.Where(x => x.WeekNo.ToString() == fullWeekNumber).FirstOrDefault()?.StartDate?.ToString("dd-MM-yyyy"))</h4>
+
+
+                    </td>
+
+                    <td>
+                        <p style="font-size:14px;text-align:center">
+                            <span style="font-family:Helvetica"><img src="https://devprism.azurewebsites.net/assets/media/logos/pdfreportlogo.PNG" style="width:150px" /></span>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+
+
+        }
+
+        <div style="height:auto; font-family:Helvetica;">
+            @{
+                if (Model.boxReportModel?.Count > 0)
+                {
+                    foreach (var department in Model.boxReportModel)
+                    {
+                        <div style="padding-top:10px;font-size: 16px; "><b>@department.DepartmentName</b></div>
+
+                        if (department.boxReportModel?.Count > 0)
+                        {
+                            
+                            int counter = 1;
+
+                            foreach (var machine in department.boxReportModel)
+                            {
+                                if (machine.IsShiftExist)
+                                {
+                                    <table style="page-break-inside: avoid;">
+                                        <tr style="font-family:Helvetica;">
+                                            <td colspan="@machine.boxReportModels?.Count">@machine.MachineNumber</td>
+                                        </tr>
+                                        <tr>
+
+                                            @foreach (var item in machine.boxReportModels)
+                                            {
+
+                                                if (item.Id == 0)
+                                                {
+                                                    <td style="width: 120px;height: 140px;vertical-align:top;
+                                                        border: 1px solid black;
+                                                        margin-top: 0px;
+                                                        font-size: 11px;
+                                                        padding: 3px;
+                                                        line-height: 12px;
+                                                                font-family: Helvetica;">
+                                                        <table style="width:100%;font-family:Helvetica;">
+                                                            <tr style="font-family:Helvetica;">
+                                                                <td style="border-bottom:.5px solid black">#@item.RowNum</td>
+                                                                <td style="border-bottom:.5px solid black"></td>
+                                                                <td style="border-bottom:.5px solid black"></td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    if (item.shift == "Cancelled")
+                                                    {
+                                                        <td style="width: 120px;height: 140px;vertical-align:top;
+                                                                border: 1px solid black;
+                                                                margin-top: 0px;
+                                                                font-size: 11px;
+                                                                padding: 3px;
+                                                                line-height: 12px;
+                                                                        font-family: Helvetica;">
+                                                            <table style="width:100%;font-family:Helvetica;">
+                                                                <tr style="font-family:Helvetica;">
+                                                                    <td style="border-bottom:.5px solid black">#@item.RowNum</td>
+                                                                    <td style="border-bottom:.5px solid black"></td>
+                                                                    <td style="border-bottom:.5px solid black"></td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        // url('"+ imageUrl +"')
+                                                        <td style="width: 120px;height: 140px;vertical-align:top;
+                                                                border: 1px solid black;
+                                                                margin-top: 0px;
+                                                                font-size: 11px;
+                                                                padding: 3px;
+                                                                background:@(item.shift == "Caped"?"url('"+ imageUrl +"')":(@item.WorksiteDetails=="Workshops"?"white":" rgb(192, 255, 192)"));
+                                                                line-height: 12px;font-family: Helvetica;">
+                                                            <table style="width:100%;font-family:Helvetica;">
+                                                                <tr style="font-family:Helvetica;">
+                                                                    <td>#@item.RowNum</td>
+                                                                    <td>@item.PpreDay</td>
+                                                                    <td>@item.StartDateTime</td>
+                                                                </tr>
+
+                                                                <tr style="font-family:Helvetica;">
+                                                                    <td colspan="3" style="@(item.shift == "Caped"?"color:#ff0000;":"")">@item.WorksiteDetails</td>
+
+                                                                </tr>
+                                                                <tr style="font-family:Helvetica;">
+                                                                    <td colspan="3">@item.WorkDescription</td>
+
+                                                                </tr>
+                                                                <tr style="font-family:Helvetica;">
+                                                                    <td colspan="3">
+                                                                        @{
+                                                                            // Parse StartTime and FinishTime into DateTime objects
+                                                                            DateTime startTime = DateTime.Parse(item.StartTime);
+                                                                            DateTime finishTime = DateTime.Parse(item.FinishTime);
+                                                                        }
+
+                                                                        <span style="font-size:11px;"> @startTime.ToString("HH:mm:ss") - @finishTime.ToString("HH:mm:ss") (@item.CalculatedTime)</span>
+                                                                    </td>
+                                                                <tr style="font-family:Helvetica;">
+                                                                    <td colspan="3"><span>@item.OwnerName</span> <span>@item.WorksiteELR</span></td>
+
+                                                                </tr>
+                                                                <tr style="font-family:Helvetica;">
+                                                                    <td colspan="3">@item.PpreDriver</td>
+
+                                                                </tr>
+                                                                <tr style="font-family:Helvetica;">
+                                                                    <td colspan="3">@item.Conductor</td>
+
+                                                                </tr>
+                                                                <tr style="font-family:Helvetica;">
+                                                                    <td style="text-align:left;">
+                                                                            @item.OutShortCode
+                                                                    </td>
+                                                                    <td style="text-align:center;">
+                                                                            @item.InShortCode
+                                                                    </td>
+                                                                    <td style="text-align:right;">
+                                                                            @item.Id.ToString()
+                                                                    </td>
+
+                                                                </tr>
+                                                                <tr style="font-family:Helvetica;">
+
+                                                                    <td colspan="3" style="text-align:right">
+                                                                        <span style="float:right;">@item.PTONumber</span>
+                                                                    </td>
+
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    }
+                                                }
+
+
+                                            }
+                                        </tr>
+                                    </table>
+                                    counter++;
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+        </div>
+    }
+}

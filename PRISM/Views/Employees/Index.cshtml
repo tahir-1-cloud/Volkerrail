@@ -1,0 +1,561 @@
+﻿@using System.Security.Principal;
+@using Newtonsoft.Json
+@using PRISM.DTO;
+@using PRISM.DTO.Employeedto
+@using PRISM.Models;
+@using Nancy.Json;
+@using System.Security.Claims
+@{
+    bool IsInsert = false;
+    bool IsEdit = false;
+    bool IsRead = false;
+    bool IsDelete = false;
+    string alphabat = Context.Request.Query["SearchText"];
+}
+@if (User.Identity.IsAuthenticated)
+{
+    var identity = User.Identity as ClaimsIdentity;
+
+    try
+    {
+        var roleObject = JsonConvert.DeserializeObject<List<ModuleRoleModels>>(Context.Session.GetString("UserRoles"));
+        if (roleObject != null)
+        {
+            var currentObj = roleObject.Where(x => x.ModuleId == 3).FirstOrDefault();
+            if (currentObj != null)
+            {
+                IsInsert = currentObj.ActionRoles.IsInsert ?? false;
+                IsEdit = currentObj.ActionRoles.IsEdit ?? false;
+                IsRead = currentObj.ActionRoles.IsRead ?? false;
+                IsDelete = currentObj.ActionRoles.IsDelete ?? false;
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+
+    }
+
+
+}
+@{
+    string type = "MachineDepartment";
+    var serializer = new JavaScriptSerializer();
+}
+@model EmployeeModel
+<div id="apporg" class="d-flex flex-column-fluid align-items-start container-xxl">
+    <!--begin::Post-->
+    <div class="content flex-row-fluid" id="kt_content">
+        <!--begin::Contacts App- Add New Contact-->
+        <div class="row g-7">
+            <!--begin::Contact groups-->
+            <div class="col-lg-6 col-xl-3">
+                <!--begin::Contact group wrapper-->
+                <div class="card card-flush">
+                    <!--begin::Card header-->
+                    <div class="card-header pt-7" id="kt_chat_contacts_header">
+                        <!--begin::Card title-->
+                        <div class="card-title">
+                            <h2>Employee Management</h2>
+                        </div>
+                        <!--end::Card title-->
+                    </div>
+                    <!--end::Card header-->
+                    <!--begin::Card body-->
+                    <div class="card-body pt-5">
+                        <!--begin::Contact groups-->
+                        <div class="d-flex flex-column gap-5">
+                            <!--begin::Contact group-->
+                            <div class="d-flex flex-stack">
+                                @{
+                                    if (Model.EmpType == "")
+                                    {
+                                            <a href="@Url.Action("Index", "Employees" ,new {SearchText="", type = 0})" class="fs-6 fw-bold text-gray-800 text-hover-primary text-active-primary active">All</a>
+                                            <div class="badge badge-light-primary">@(Model.EmployeeList?.Count.ToString())</div>
+                                    }
+                                    else
+                                    {
+                                            <a href="@Url.Action("Index", "Employees" ,new {SearchText="",  type = 0})" class="fs-6 fw-bold text-gray-800 text-hover-primary text-active-primary">All</a>
+                                            <div class="badge badge-light-primary">@(Model.EmployeeList?.Count.ToString())</div>
+                                    }
+                                }
+
+                            </div>
+                            @{
+                                if (Model.LookupList?.Count > 0)
+                                {
+                                    foreach (var lok in Model.LookupList)
+                                    {
+                                        if (lok.LookupType == "MachineDepartment")
+                                        {
+                                            if (lok.Name == Model.EmpType)
+                                            {
+                                                <div class="d-flex flex-stack">
+                                                    <a href="@Url.Action("Index", "Employees" ,new {SearchText="",  type = lok.Name })" class="fs-6 fw-bold text-gray-800 text-hover-primary text-active-primary active">@lok.Name</a>
+                                                    <div class="badge badge-light-primary">@Model.EmployeeList?.Where(x => x.Department == lok.Name).Count().ToString()</div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="d-flex flex-stack">
+                                                    <a href="@Url.Action("Index", "Employees",new { SearchText="", type = lok.Name })" class="fs-6 fw-bold text-gray-800 text-hover-primary text-active-primary">@lok.Name</a>
+                                                    <div class="badge badge-light-primary">@Model.EmployeeList?.Where(x => x.Department == lok.Name).Count().ToString()</div>
+                                                </div>
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+
+                            <!--begin::Contact group-->
+                        </div>
+                        <!--end::Contact groups-->
+                        <!--begin::Separator-->
+                        <div class="separator my-7"></div>
+                        <!--begin::Separator-->
+                        <!--begin::Add contact group-->
+                        <label class="fs-6 fw-semibold form-label">Add Departments</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-solid" placeholder="Type" v-model="lookup.Name">
+                            <button type="button" class="btn btn-icon btn-light" v-on:click="InsertLookup($event)">
+                                <i class="ki-duotone ki-plus-square fs-2">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                    <span class="path3"></span>
+                                </i>
+                            </button>
+                        </div>
+                       
+                    </div>
+                    <!--end::Card body-->
+                </div>
+                <!--end::Contact group wrapper-->
+            </div>
+            <!--end::Contact groups-->
+            <!--begin::Search-->
+            <div class="col-lg-6 col-xl-3">
+                <!--begin::Contacts-->
+                <div class="card card-flush" id="kt_contacts_list">
+                    <!--begin::Card header-->
+                    <div class="card-header pt-7" id="kt_contacts_list_header">
+                        <!--begin::Form-->
+                        <form class="d-flex align-items-center position-relative w-100 m-0" autocomplete="off">
+                            <!--begin::Icon-->
+                            <i class="ki-duotone ki-magnifier fs-3 text-gray-500 position-absolute top-50 ms-5 translate-middle-y">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                            </i>
+                            <!--end::Icon-->
+                            <!--begin::Input-->
+                            <input type="text" class="form-control form-control-solid ps-13" id="txtSearchText" name="search" value="@alphabat" v-on:keyup.enter="SearchFilter('Template')">
+                            <!--end::Input-->
+                        </form>
+                        <!--end::Form-->
+                    </div>
+                    <!--end::Card header-->
+                    <!--begin::Card body-->
+                    <div class="card-body pt-5" id="kt_contacts_list_body">
+                        <!--begin::List-->
+                        <div class="scroll-y me-n5 pe-5 h-300px h-xl-auto" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#kt_header, #kt_toolbar, #kt_footer, #kt_contacts_list_header" data-kt-scroll-wrappers="#kt_content, #kt_contacts_list_body" data-kt-scroll-stretch="#kt_contacts_list, #kt_contacts_main" data-kt-scroll-offset="5px" style="max-height: 765px;">
+                            @{
+                                if (IsRead)
+                                {
+                                    if (Model.EmployeeList?.Count > 0)
+                                    {
+                                        foreach (var emp in Model.EmployeeList)
+                                        {
+                                            if (emp.Department == Model.EmpType || Model.EmpType == "")
+                                            {
+                                                    <div class="d-flex flex-stack py-4">
+                                                        <!--begin::Details-->
+                                                        <div class="d-flex align-items-center">
+                                                            <!--begin::Avatar-->
+                                                            <div class="symbol symbol-40px symbol-circle">
+                                                                <span class="symbol-label bg-light-warning text-warning fs-6 fw-bolder">
+                                                                    @(
+                                                                emp.FirstName?.Substring(0, 1).ToUpper()
+                                                                        )
+                                                                </span>
+                                                            </div>
+                                                            <!--end::Avatar-->
+                                                            <!--begin::Details-->
+                                                            <div class="ms-4">
+                                                            @{
+                                                               
+                                                                var serializedJson = serializer.Serialize(emp);                                        
+                                                                var escapedJson = serializedJson.Replace("'", "\\'");
+                                                            }
+
+                                                            <a v-on:click="Edit('@escapedJson')" class="fs-6 fw-bold text-gray-900 text-hover-primary mb-2">
+                                                                @(emp.FirstName + " " + emp.LastName)
+                                                            </a>
+
+                                                                <div class="fw-semibold fs-7 text-muted">@emp.JobTitle</div>
+                                                            </div>
+                                                            <!--end::Details-->
+                                                        </div>
+                                                        <!--end::Details-->
+                                                    </div>
+                                                    <!--end::User-->
+                                                    <!--begin::Separator-->
+                                                    <div class="separator separator-dashed d-none"></div>
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+
+                            <!--end::User-->
+                        </div>
+                        <!--end::List-->
+                    </div>
+                    <!--end::Card body-->
+                </div>
+                <!--end::Contacts-->
+            </div>
+            <!--end::Search-->
+            <!--begin::Content-->
+            <div class="col-xl-6">
+                <!--begin::Contacts-->
+                <div class="card card-flush h-lg-100">
+                    <!--begin::Card header-->
+                    <div class="card-header pt-7">
+                        <!--begin::Card title-->
+                        <div class="card-title">
+                            <i class="ki-duotone ki-badge fs-1 me-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                                <span class="path3"></span>
+                                <span class="path4"></span>
+                                <span class="path5"></span>
+                            </i>
+                            <h2>{{AddUpdate}} Employee</h2>
+                        </div>
+                        <!--end::Card title-->
+                    </div>
+                    <!--end::Card header-->
+                    <!--begin::Card body-->
+                    <div class="card-body pt-5">
+                        <!--begin::Form-->
+                        <form id="inputform" class="form fv-plugins-bootstrap5 fv-plugins-framework">
+
+                            <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
+                                <!--begin::Col-->
+                                <div class="col">
+                                    <label class="fs-6 fw-semibold form-label mt-3">
+                                        <span class="required">First Name</span>
+                                    </label>
+                                    <div class="fv-row mb-7">
+
+                                        <input type="text" class="form-control form-control-solid  validate[required]" name="FirstName" v-model="d.FirstName" />
+                                        <!--end::Input-->
+                                    </div>
+                                    <!--end::Input group-->
+                                </div>
+                                <div class="col">
+                                    <!--begin::Input group-->
+                                    <div class="fv-row mb-7 fv-plugins-icon-container">
+                                        <!--begin::Label-->
+                                        <label class="fs-6 fw-semibold form-label mt-3">
+                                            <span class="required">Last Name</span>
+                                        </label>
+                                        <!--end::Label-->
+                                        <div class="w-100">
+                                            <input type="text" class="form-control form-control-solid validate[required]" name="LastName" v-model="d.LastName" />
+                                        </div>
+                                    </div>
+                                    <!--end::Input group-->
+                                </div>
+
+                                <!--end::Col-->
+                            </div>
+                            <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
+                                <!--begin::Col-->
+                                <div class="col">
+                                    <label class="fs-6 fw-semibold form-label mt-3">
+                                        <span class="">Location</span>
+                                    </label>
+                                    <div class="fv-row mb-7">
+
+                                        <input type="text" class="form-control form-control-solid" name="Location" v-model="d.Location" />
+                                        <!--end::Input-->
+                                    </div>
+                                    <!--end::Input group-->
+                                </div>
+
+                                <div class="col">
+                                    <!--begin::Input group-->
+                                    <div class="fv-row mb-7 fv-plugins-icon-container">
+                                        <!--begin::Label-->
+                                        <label class="fs-6 fw-semibold form-label mt-3">
+                                            <span class="">Job Title</span>
+                                        </label>
+                                        <!--end::Label-->
+                                        <div class="w-100">
+                                            <input type="text" class="form-control form-control-solid" name="JobTitle" v-model="d.JobTitle" />
+                                        </div>
+                                    </div>
+                                    <!--end::Input group-->
+                                </div>
+                            </div>
+                          
+
+                            <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
+                               
+                                <!--end::Col-->
+                                <!--begin::Col-->
+                                <div class="col">
+                                    <!--begin::Input group-->
+                                    <div class="fv-row mb-7 fv-plugins-icon-container">
+                                        <!--begin::Label-->
+                                        <label class="fs-6 fw-semibold form-label mt-3">
+                                            <span>Employee Type </span>
+                                        </label>
+                                        <!--end::Label-->
+                                        <div class="w-100">
+                                            <select class="form-control form-control-solid" v-model="d.EmployeeTypeId">
+                                                <option value=""> -- select --</option>
+                                                @{
+                                                    if (Model.LookupList?.Count > 0)
+                                                    {
+                                                        for (int i = 0; i < Model.LookupList.Count; i++)
+                                                        {
+                                                            var r = Model.LookupList[i];
+                                                            if (r.LookupType == "Employee")
+                                                            {
+                                                                <option value="@(r.Id)"> @(r.Name) </option>
+
+                                                            }
+
+                                                        }
+                                                    }
+                                                }
+                                                <
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <!--end::Input group-->
+                                </div>
+                                <div class="col">
+                                    <div class="fv-row mb-7 fv-plugins-icon-container">
+                                        <!--begin::Label-->
+                                        <label class="fs-6 fw-semibold form-label mt-3">
+                                            <span class="required">Department</span>
+                                        </label>
+                                        <!--end::Label-->
+                                        <div class="w-100">
+                                            <select class="form-control form-control-solid  validate[required]" v-model="d.Department">
+                                                <option value=""> -- select --</option>
+                                                @{
+                                                    if (Model.LookupList?.Count > 0)
+                                                    {
+                                                        for (int i = 0; i < Model.LookupList.Count; i++)
+                                                        {
+                                                            var r = Model.LookupList[i];
+                                                            if (r.LookupType == "MachineDepartment")
+                                                            {   <option value="@(r.Name)"> @(r.Name) </option>
+                                                                
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                <
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="fv-row mb-7 fv-plugins-icon-container">
+                                        <!--begin::Label-->
+                                        <label class="fs-6 fw-semibold form-label mt-3">
+                                            <span class="">Contact Number</span>
+                                        </label>
+                                        <!--end::Label-->
+                                        <div class="w-100">
+                                            <input type="text" class="form-control form-control-solid" name="Contact Number" v-model="d.ContactNumber" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                           
+
+                            <div class="separator mb-6"></div>
+                            <!--end::Separator-->
+                            <!--begin::Action buttons-->
+                            <div class="d-flex justify-content-end">
+                                @{
+                                    if (IsDelete)
+                                    {
+                                            <button type="reset" class="btn btn-light me-3" v-on:click="Delete($event)">Delete</button>
+                                    }
+                                }
+
+                                <button type="reset" class="btn btn-light me-3" v-on:click="Reset()">Cancel</button>
+                                <!--end::Button-->
+                                <!--begin::Button-->
+                                @{
+                                    if (IsInsert)
+                                    {
+                                            <button type="button" class="btn btn-primary" v-on:click="Insert($event)">
+                                                <span class="indicator-label">Save</span>
+                                                <span class="indicator-progress">
+                                                    Please wait...
+                                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                                </span>
+                                            </button>
+                                    }
+                                }
+                                <!--end::Button-->
+                            </div>
+                            <!--end::Action buttons-->
+                        </form>
+                        <!--end::Form-->
+                    </div>
+                    <!--end::Card body-->
+                </div>
+                <!--end::Contacts-->
+            </div>
+            <!--end::Content-->
+        </div>
+        <!--end::Contacts App- Add New Contact-->
+    </div>
+    <!--end::Post-->
+</div>
+@section scripts {
+    <script>
+        var objCommon = new Common();
+        $(document).ready(function () {
+
+
+            var app = new Vue({
+                el: '#apporg',
+                data: {
+                    DataList: [],
+                    d: {},
+                    lookup: {},
+                    AddUpdate: "Add"
+                },
+                methods: {
+                    Delete($event) {
+                        var param = {
+                            Id: this.d.Id
+                        };
+
+                        objCommon.AjaxCall("/Employees/delete", JSON.stringify(param), "POST", true, function (response) {
+                            objCommon.ShowMessage("Deleted.", "success");
+                            location.reload();
+                        }, $event.currentTarget);
+                    },
+                    Edit(data) {
+                        var json = JSON.parse(data);
+                        this.d = {};
+                        this.AddUpdate = "Update";
+                        //this.d=;
+                        this.d.FirstName = json.firstName;
+                        this.d.Id = json.id;
+                        this.d.LastName = json.lastName;
+                        this.d.Initials = json.initials;
+                        this.d.Department = json.department;
+                        this.d.JobTitle = json.jobTitle;
+                        this.d.Manager = json.manager;
+                        this.d.ReportsTo = json.reportsTo;
+                        this.d.Location = json.location;
+                        this.d.EmployeeId = json.employeeId;
+                        this.d.Gang = json.gang;
+                        this.d.ContactNumber = json.contactNumber;
+                        this.d.EmployeeTypeId = json.employeeTypeId;
+
+                    },
+                    ShowLookup($event) {
+                        this.d = {};
+                        this.d.Id = 0;
+                    },
+                    Insert($event) {
+
+                        if (!objCommon.Validate("#inputform"))
+                            return;
+
+                        var et = this;
+                        var param = et.d;
+                        objCommon.AjaxCall("/Employees/insert", JSON.stringify(param), "POST", true, function (response) {
+                            objCommon.ShowMessage("Added.", "success");
+                            et.AddUpdate = "Add";
+                            location.reload();
+                        }, $event.currentTarget);
+
+                    },
+                    InsertLookup($event) {
+                        var et = this;
+                        var param = et.lookup;
+                        param.LookupType = "MachineDepartment";
+                        objCommon.AjaxCall("/Lookups/insert", JSON.stringify(param), "POST", true, function (response) {
+                            objCommon.ShowMessage("Added.", "success");
+                            //et.AddUpdate = "Add";
+                            location.reload();
+                        }, $event.currentTarget);
+
+                    },
+                    GetData($event) {
+
+
+                        objCommon.AjaxCall("/Employees/GetData", $.param({ Type }), "GET", true, function (response) {
+                            console.log(response);
+                        }, $event == null ? null : $event.currentTarget);
+
+                    },
+                    Reset() {
+                        this.d = {};
+                        et.AddUpdate = "Add";
+                    },
+                    SearchFilter(type){
+                        window.location.href = "/Employees/index?SearchText=" + $("#txtSearchText").val() + "&type=0";
+                    }
+                    
+                },
+                created() {
+
+                    //GetData(null);
+                    //var url = 'https://api.example.com/endpoint';
+                    //var postData = {
+                    //	key1: 'value1',
+                    //	key2: 'value2'
+                    //};
+
+                    //// Make the POST request using Axios
+                    //axios.post(url, postData)
+                    //	.then(function (response) {
+                    //		// Handle successful response
+                    //		console.log('Response:', response.data);
+                    //	})
+                    //	.catch(function (error) {
+                    //		// Handle error
+                    //		console.error('Error:', error);
+                    //	});
+
+                },
+                updated() {
+
+                },
+                mounted() {
+                }
+            })
+
+
+            $(".nav-item").removeClass("active");
+            $("#liEmployees").addClass("active");
+            $(".menu-item").removeClass("show");
+            $(".menu-item").removeClass("here");
+            $("#menuEmployeeManagement").addClass("here");
+            $("#menuEmployeeManagement").addClass("show");
+            $(".tab-pane").removeClass("active");
+            $("#tabEmployees").addClass("active");
+            $(".tab-pane").removeClass("show");
+            $("#tabEmployees").addClass("show");
+
+        })
+    </script>
+
+}

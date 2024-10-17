@@ -1,0 +1,145 @@
+﻿@using PRISM.DTO;
+@using PRISM.Models;
+@using Nancy.Json;
+@using PRISM.DTO.Employeedto
+@{
+    string type = "Roles";
+    var serializer = new JavaScriptSerializer();
+}
+@model RoleModels
+<div id="apporg" class="d-flex flex-column-fluid align-items-start container-xxl">
+    <!--begin::Post-->
+    <div class="content flex-row-fluid" id="kt_content">
+        <!--begin::Contacts App- Add New Contact-->
+        <div class="row g-7">
+
+            <div class="col-lg-6 col-xl-3">
+                <!--begin::Contacts-->
+                <div class="card card-flush" id="kt_contacts_list">
+                    <div class="card-header pt-7" id="kt_contacts_list_header">
+                        <!--begin::Form-->
+                        <!--end::Form-->
+                    </div>
+                    <!--end::Card header-->
+                    <!--begin::Card body-->
+                    <div class="card-body pt-5" id="kt_contacts_list_body">
+                        <!--begin::List-->
+                        <div class="scroll-y me-n5 pe-5 h-300px h-xl-auto" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#kt_header, #kt_toolbar, #kt_footer, #kt_contacts_list_header" data-kt-scroll-wrappers="#kt_content, #kt_contacts_list_body" data-kt-scroll-stretch="#kt_contacts_list, #kt_contacts_main" data-kt-scroll-offset="5px" style="max-height: 765px;">
+                            @{
+                                if (Model.RoleList?.Count > 0)
+                                {
+                                    foreach (var emp in Model.RoleList)
+                                    {
+                                        if (emp.Id != 4)
+                                        {
+                                            <div class="d-flex flex-stack py-4">
+                                                <!--begin::Details-->
+                                                <div class="d-flex align-items-center">
+                                                    <!--begin::Avatar-->
+                                                    <div class="symbol symbol-40px symbol-circle">
+                                                        <span class="symbol-label bg-light-warning text-warning fs-6 fw-bolder">
+                                                            @(
+                                                            !string.IsNullOrEmpty(emp.Name) ? emp.Name.Substring(0, 1).ToUpper() : ""
+                                                        // emp.Name?.Substring(0, 1).ToUpper()
+                                )
+                                                        </span>
+                                                    </div>
+                                                    <!--end::Avatar-->
+                                                    <!--begin::Details-->
+                                                    <div class="ms-4">
+                                                        <a v-on:click="Edit('@(serializer.Serialize(emp))')" class="fs-6 fw-bold text-gray-900 text-hover-primary mb-2">
+                                                            @(
+                                                        emp.Name
+                                )
+                                                        </a>
+                                                    </div>
+                                                    <!--end::Details-->
+                                                </div>
+                                                <!--end::Details-->
+                                            </div>
+                                            <!--end::User-->
+                                            <!--begin::Separator-->
+                                            <div class="separator separator-dashed d-none"></div>
+                                        }
+                                    }
+                                }
+                            }
+                            <div class="separator my-7"></div>
+                            <!--begin::Separator-->
+                            <!--begin::Add contact group-->
+                            <label class="fs-6 fw-semibold form-label">Add Roles</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-solid" placeholder="Role Name" v-model="role.Name">
+                                <button type="button" class="btn btn-icon btn-light" v-on:click="InsertRoles($event)">
+                                    <i class="ki-duotone ki-plus-square fs-2">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                        <span class="path3"></span>
+                                    </i>
+                                </button>
+                            </div>
+
+                            <!--end::User-->
+                        </div>
+                        <!--end::List-->
+                    </div>
+                    <!--end::Card body-->
+                </div>
+                <!--end::Contacts-->
+            </div>
+            <!--end::Search-->
+            <!--begin::Content-->
+            <div class="col-xl-9">
+                <!--begin::Contacts-->
+                <div class="card card-flush h-lg-100">
+                    <!--begin::Card header-->
+                    <div class="card-header pt-7">
+                        <!--begin::Card title-->
+                        <div class="card-title">
+                            <i class="ki-duotone ki-badge fs-1 me-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                                <span class="path3"></span>
+                                <span class="path4"></span>
+                                <span class="path5"></span>
+                            </i>
+                            <h2>Assign Roles</h2>
+                        </div>
+                        <!--end::Card title-->
+                    </div>
+                    <!--end::Card header-->
+                    <!--begin::Card body-->
+                    <div class="card-body pt-5">
+                        <!--begin::Form-->
+                            <div id="jstreeroles" class="tree-demo">
+                            </div>
+
+                            <div class="separator mb-6"></div>
+                            <!--end::Separator-->
+                            <!--begin::Action buttons-->
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-primary" v-on:click="Insert($event)">
+                                    <span class="indicator-label">Save</span>
+                                    <span class="indicator-progress">
+                                        Please wait...
+                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                    </span>
+                                </button>
+                            </div>
+                    </div>
+                    <!--end::Card body-->
+                </div>
+                <!--end::Contacts-->
+            </div>
+            <!--end::Content-->
+        </div>
+        <!--end::Contacts App- Add New Contact-->
+    </div>
+    <!--end::Post-->
+</div>
+@section scripts {
+    <link href="~/assets/plugins/custom/jstree/jstree.bundle.css" rel="stylesheet" />
+    <script src="~/assets/plugins/custom/jstree/jstree.bundle.js"></script>
+    <script src="~/appscripts/userroles.js"></script>
+
+}
